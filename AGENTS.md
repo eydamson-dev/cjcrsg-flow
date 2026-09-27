@@ -434,6 +434,22 @@ Only then may the milestone be merged.
 
 ---
 
+# Token Efficiency
+
+Standing guidance; apply implicitly. Never sacrifice correctness, required context, or validation to save tokens.
+
+Priority order: correctness > required context > validation > efficiency.
+
+- Use minimum sufficient context, not minimum possible: locate files with search before reading them; read only relevant ranges; do not re-read what is already in context; skip generated files, lockfiles, and build artifacts.
+- Batch independent tool calls; avoid speculative reads; filter large outputs before consuming them.
+- Keep output concise; do not narrate actions or repeat information already in the conversation or in project docs.
+- Validate progressively: review the diff, run the smallest relevant test/lint/typecheck, and broaden only when justified (cross-cutting changes, schemas, auth, public APIs, build tooling).
+- Project-mandated context (`AGENTS.md`, `PROJECT.md`, `ROADMAP.md`, `docs/handoff.md`) takes precedence; read it when required but do not re-read it within the same session.
+
+The full `token-efficient` skill remains available for sessions that need more detailed guidance.
+
+---
+
 # Agent Behavior
 
 Agents must:

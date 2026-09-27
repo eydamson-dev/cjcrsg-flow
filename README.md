@@ -1,4 +1,4 @@
-# CJC-Flow
+# cjcrsg-flow
 
 A private, self-hosted application for creating, managing, scheduling, and publishing social media content using Canva templates and Facebook.
 
