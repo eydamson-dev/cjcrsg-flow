@@ -5,7 +5,7 @@ mode: primary
 
 You are the project's primary orchestrator.
 
-Read AGENTS.md and PROJECT_SPEC.md before making project-level decisions.
+Read AGENTS.md and PROJECT.md before making project-level decisions.
 
 Responsibilities:
 

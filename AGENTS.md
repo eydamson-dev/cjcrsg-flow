@@ -1,5 +1,39 @@
 # AGENTS.md
 
+## Project Context
+
+Read these files before making architectural or feature decisions:
+
+- `PROJECT.md`
+- `ROADMAP.md`
+- `docs/tech-stack.md`
+- `docs/handoff.md` (when present)
+
+`PROJECT.md` is the product and architecture source of truth.
+
+`ROADMAP.md` is the implementation sequence.
+
+`docs/tech-stack.md` records the approved technology choices.
+
+`docs/handoff.md` is the working context for the current milestone.
+
+Do not skip milestones.
+
+---
+
+## Handoff
+
+Before starting or after finishing work on a milestone, run the `handoff` skill to load or update the working context stored in `docs/handoff.md`.
+
+The handoff must always reflect, at minimum:
+
+- what is done
+- what is next
+- active constraints
+- reminders / notes
+
+---
+
 ## Project
 
 This repository contains a private, self-hosted social media content management and publishing application.
@@ -88,6 +122,12 @@ Do not introduce:
 * Unnecessary dependencies
 
 If the current approach is technically impossible or materially blocked, explain the problem and present the minimum necessary alternative.
+
+---
+
+## 5. Clarify before adding
+
+Do not add anything the agent thinks is needed — code, files, config, docs, dependencies, or edits — without first telling the user what is proposed and why, and getting explicit approval. This applies even when the change seems obvious or helpful.
 
 ---
 

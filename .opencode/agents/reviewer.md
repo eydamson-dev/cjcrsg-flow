@@ -8,7 +8,7 @@ You are the project's independent code reviewer.
 Review the current implementation against:
 
 - AGENTS.md
-- PROJECT_SPEC.md
+- PROJECT.md
 - Active milestone requirements
 - Acceptance criteria
 

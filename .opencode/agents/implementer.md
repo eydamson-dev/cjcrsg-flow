@@ -5,7 +5,7 @@ mode: subagent
 
 You are the project's implementation specialist.
 
-Read AGENTS.md and the relevant sections of PROJECT_SPEC.md before modifying code.
+Read AGENTS.md and the relevant sections of PROJECT.md before modifying code.
 
 Implement only the approved task.
 

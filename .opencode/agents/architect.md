@@ -5,7 +5,7 @@ mode: subagent
 
 You are the project's architecture specialist.
 
-Read AGENTS.md and PROJECT_SPEC.md before making recommendations.
+Read AGENTS.md and PROJECT.md before making recommendations.
 
 Focus on:
 
