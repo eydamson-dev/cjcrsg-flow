@@ -67,8 +67,21 @@ export interface ExportJobResponse {
 }
 
 export class CanvaClient {
-  async listBrandTemplates(accessToken: string): Promise<ListBrandTemplatesResponse> {
-    const response = await fetch(`${CANVA_API_BASE}/brand-templates?limit=100`, {
+  async listBrandTemplates(
+    accessToken: string,
+    continuation?: string,
+    query?: string,
+  ): Promise<ListBrandTemplatesResponse> {
+    const url = new URL(`${CANVA_API_BASE}/brand-templates`);
+    url.searchParams.set("limit", "100");
+    if (continuation) {
+      url.searchParams.set("continuation", continuation);
+    }
+    if (query) {
+      url.searchParams.set("query", query);
+    }
+
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return this.readJson<ListBrandTemplatesResponse>(response);

@@ -8,3 +8,35 @@ datasource db {
 }
 
 // Application entities are introduced with the MVP that owns them.
+
+// MVP 2 — Template Management.
+// A local cache of the user's Canva brand templates and their Autofill fields,
+// refreshed by an explicit sync. Canva remains the source of truth for the
+// template definition; the application stores references by Canva identifier.
+model Template {
+  id                  String          @id @default(cuid())
+  canvaId             String          @unique
+  title               String
+  thumbnailKey        String?
+  thumbnailContentType String?
+  viewUrl             String?
+  createUrl           String?
+  canvaCreatedAt      DateTime?
+  canvaUpdatedAt      DateTime?
+  syncedAt            DateTime        @default(now())
+  fields              TemplateField[]
+
+  @@map("templates")
+}
+
+model TemplateField {
+  id         String   @id @default(cuid())
+  templateId String
+  name       String
+  type       String
+  position   Int      @default(0)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, name])
+  @@map("template_fields")
+}

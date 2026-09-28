@@ -1,5 +1,5 @@
 import type { AppConfig } from "../../config/env.js";
-import { CanvaClient, type BrandTemplate, type BrandTemplateDataset, type DatasetValue, type ExportJobResponse, type AutofillJobResult, type CreateAutofillJobResponse } from "./canva-client.js";
+import { CanvaClient, type BrandTemplate, type BrandTemplateDataset, type DatasetValue, type ExportJobResponse, type AutofillJobResult, type CreateAutofillJobResponse, type ListBrandTemplatesResponse } from "./canva-client.js";
 import {
   CANVA_SCOPES,
   buildAuthorizationUrl,
@@ -8,6 +8,14 @@ import {
   refreshAccessToken,
 } from "./oauth.js";
 import { PendingAuthStore, TokenStore } from "./token-store.js";
+
+// Safety cap on brand-template pagination (100 templates per page).
+export const MAX_TEMPLATE_PAGES = 20;
+
+// Only brand templates carrying this Canva keyword are pulled into the library.
+// Canva has no dedicated tag filter, so this keyword is passed to the list
+// endpoint's `query` search parameter.
+export const TEMPLATE_SEARCH_QUERY = "flow-template";
 
 export class NotConfiguredError extends Error {
   constructor() {
@@ -111,6 +119,28 @@ export class CanvaService {
     const accessToken = await this.getAccessToken();
     const response = await this.client.listBrandTemplates(accessToken);
     return response.items;
+  }
+
+  // Follows Canva's continuation tokens to retrieve every brand template.
+  // A page cap guards against an unbounded loop from a malformed response.
+  async listAllBrandTemplates(): Promise<BrandTemplate[]> {
+    const accessToken = await this.getAccessToken();
+    const templates: BrandTemplate[] = [];
+    let continuation: string | undefined;
+    let pages = 0;
+
+    do {
+      const response: ListBrandTemplatesResponse = await this.client.listBrandTemplates(
+        accessToken,
+        continuation,
+        TEMPLATE_SEARCH_QUERY,
+      );
+      templates.push(...response.items);
+      continuation = response.continuation;
+      pages += 1;
+    } while (continuation && pages < MAX_TEMPLATE_PAGES);
+
+    return templates;
   }
 
   async getBrandTemplate(id: string): Promise<BrandTemplate> {
