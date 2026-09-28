@@ -339,7 +339,7 @@ Current project baseline:
 
 | Capability                                                       | Status     |
 | ---------------------------------------------------------------- | ---------- |
-| Canva Pro Autofill                                               | SUPPORTED  |
+| Canva Pro Autofill                                               | SUPPORTED WITH LIMITATIONS |
 | Canva Brand Templates                                            | SUPPORTED  |
 | Canva template retrieval                                         | SUPPORTED  |
 | Canva Autofill field discovery                                   | SUPPORTED  |
@@ -355,6 +355,8 @@ Current project baseline:
 | Synchronizing those direct Facebook changes into the application | UNVERIFIED |
 
 Unverified capabilities must not become committed milestones until independently verified against current official documentation.
+
+Canva Pro users can access Autofill under a limited development trial quota. Confirm the available quota and production access policy when connecting the Canva developer integration.
 
 ---
 

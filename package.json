@@ -1,0 +1,13 @@
+{
+  "name": "cjcrsg-flow",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.4.2",
+  "scripts": {
+    "dev": "pnpm --parallel --filter frontend --filter backend dev",
+    "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "lint": "pnpm --filter frontend lint && pnpm --filter backend lint",
+    "typecheck": "pnpm --filter frontend typecheck && pnpm --filter backend typecheck",
+    "test": "pnpm --filter backend test"
+  }
+}

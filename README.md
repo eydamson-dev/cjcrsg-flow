@@ -36,7 +36,7 @@ Canva remains the source of truth for the design; cjcrsg-flow stores references 
 
 | MVP | Focus                        | Status      |
 | --- | ---------------------------- | ----------- |
-| 1   | Canva integration            | Not started |
+| 1   | Canva integration            | In progress |
 | 2   | Template management          | Not started |
 | 3   | Content creation & management | Not started |
 | 4   | Facebook publishing          | Not started |
@@ -59,7 +59,7 @@ See `ROADMAP.md` for the full implementation sequence.
 
 ## Status
 
-Pre-MVP 1 — documentation and agent configuration only; no application code yet.
+MVP 1 — foundation scaffold is complete and verified. Canva developer-app setup and the end-to-end Canva workflow are next.
 
 ## Documentation
 
