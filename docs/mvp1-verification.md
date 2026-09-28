@@ -42,50 +42,92 @@ Acceptance criteria, mapped to milestones:
 
 ## Test steps
 
-### Automated checks
+### Step 0 — Install dependencies
+
+From the repo root, once:
 
 ```sh
 pnpm install
+```
+
+### Step 1 — Run the app
+
+Choose **one** of the following.
+
+#### Option A: local dev (two terminals)
+
+```sh
+# terminal 1 — backend API, http://127.0.0.1:3001
+pnpm --filter backend dev
+
+# terminal 2 — frontend UI, http://127.0.0.1:3000
+pnpm --filter frontend dev
+```
+
+#### Option B: Docker (one command)
+
+```sh
+docker compose up --build
+```
+
+Either way, wait until:
+
+- `curl http://127.0.0.1:3001/health` returns `{"status":"ok"}`
+- `curl -o /dev/null -w "%{http_code}" http://127.0.0.1:3000` returns `200`
+
+### Step 2 — Connect to Canva (OAuth)
+
+1. Open **http://127.0.0.1:3000** in your browser.
+2. Click **Connect to Canva**, then **Allow** on Canva's consent screen.
+3. You are redirected back to the frontend with `?connected=1`.
+
+### Step 3 — Verify authentication
+
+```sh
+curl http://127.0.0.1:3001/canva/status
+# → {"configured":true,"authenticated":true}
+```
+
+### Step 4 — Exercise the Canva workflow (curl)
+
+```sh
+# 1.3 Retrieve templates — note a template id
+curl http://127.0.0.1:3001/canva/templates
+
+# 1.4 Discover fields
+curl http://127.0.0.1:3001/canva/templates/EAHWepv4UXY/dataset
+
+# 1.5 Autofill — create the job
+curl -X POST http://127.0.0.1:3001/canva/autofill \
+  -H 'Content-Type: application/json' \
+  -d '{"brandTemplateId":"EAHWepv4UXY","title":"Test Autofill 1","data":{"heading":{"type":"text","text":"Happy Birthday"},"subheading":{"type":"text","text":"Celebrate with us"},"body":{"type":"text","text":"Join us for a special day."}}}'
+
+# 1.5 Poll the job (replace {jobId}) until status == "success"; note the design id
+curl http://127.0.0.1:3001/canva/autofill/{jobId}
+
+# 1.6 Export — create the job (replace {designId})
+curl -X POST http://127.0.0.1:3001/canva/exports \
+  -H 'Content-Type: application/json' \
+  -d '{"designId":"{designId}","format":"png"}'
+
+# 1.6 Poll until "success", then download into storage (replace {jobId})
+curl http://127.0.0.1:3001/canva/exports/{jobId}
+curl -X POST http://127.0.0.1:3001/canva/exports/{jobId}/store \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"exports/my-design.png"}'
+```
+
+The stored file appears under `backend/data/storage/`.
+
+### Step 5 — Automated checks
+
+```sh
 pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
 docker compose config
 ```
-
-### Run the backend
-
-```sh
-pnpm --filter backend dev          # reads repo-root .env, listens on :3001
-```
-
-### Exercise the Canva workflow
-
-1. **Status (before auth)**
-   `curl http://127.0.0.1:3001/canva/status` → `{"configured":true,"authenticated":false}`
-
-2. **Authorize (OAuth + PKCE)** — open `http://127.0.0.1:3001/oauth/authorize`
-   in a browser, approve the scopes. Canva redirects to
-   `/oauth/callback`, which exchanges the code for tokens.
-
-3. **Status (after auth)**
-   `curl http://127.0.0.1:3001/canva/status` → `{"configured":true,"authenticated":true}`
-
-4. **Retrieve templates (1.3)**
-   `curl http://127.0.0.1:3001/canva/templates`
-
-5. **Discover fields (1.4)**
-   `curl http://127.0.0.1:3001/canva/templates/{id}/dataset`
-
-6. **Autofill (1.5)**
-   `curl -X POST http://127.0.0.1:3001/canva/autofill -H 'Content-Type: application/json' -d '{...}'`
-   then poll `curl http://127.0.0.1:3001/canva/autofill/{jobId}` until `success`.
-
-7. **Export + obtain asset (1.6)**
-   `curl -X POST http://127.0.0.1:3001/canva/exports -d '{"designId":"...","format":"png"}'`
-   then poll `curl http://127.0.0.1:3001/canva/exports/{jobId}` until `success`, and
-   `curl -X POST http://127.0.0.1:3001/canva/exports/{jobId}/store` to download the
-   asset into local storage.
 
 ## Test evidence
 

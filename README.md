@@ -32,6 +32,28 @@ Canva template → discover fields → dynamic form → autofill → design → 
 
 Canva remains the source of truth for the design; cjcrsg-flow stores references and submitted content.
 
+## Running locally
+
+Prerequisites: Node.js 24, pnpm 12, and a Canva developer app (`CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET`, `CANVA_REDIRECT_URI`) in a repo-root `.env` (copy `.env.example`).
+
+```sh
+pnpm install
+
+# backend API on http://127.0.0.1:3001
+pnpm --filter backend dev
+
+# frontend UI on http://127.0.0.1:3000 (separate terminal)
+pnpm --filter frontend dev
+```
+
+Or run the full stack with Docker:
+
+```sh
+docker compose up --build
+```
+
+Open http://127.0.0.1:3000 and click **Connect to Canva** to authorize. See `docs/mvp1-verification.md` for the end-to-end test steps and evidence.
+
 ## Roadmap
 
 | MVP | Focus                        | Status      |
