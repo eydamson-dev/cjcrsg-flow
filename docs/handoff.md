@@ -4,24 +4,26 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 2 — Template Management** — NOT STARTED. Make manually created Canva templates usable through the application: template retrieval, template library, template selection, field discovery, a generic template model, and template synchronization. See `ROADMAP.md` §MVP 2.
+**MVP 2 — Template Management** — implemented and live-verified on `milestone/mvp2-templates`; awaiting independent review, PR, and user verification. Displays Canva templates and the Autofill fields each template requires. See `ROADMAP.md` §MVP 2 and `docs/mvp2-verification.md`.
 
 ## Done
 
-**MVP 1 — Canva Integration: COMPLETE and merged** (PR #1 into `main`). The programmatic Canva workflow is established and verified live: Canva developer app → OAuth (Authorization Code + PKCE) → brand template retrieval → Autofill field discovery → design generation → programmatic export and asset download via `StorageService`. Evidence and reproducible steps are in `docs/mvp1-verification.md`.
+**MVP 2 — Template Management: implemented + live-verified (not yet merged).**
 
-Foundation established in MVP 1:
+- 2.1–2.6 implemented: paginated template retrieval, local template library, template selection/detail, field discovery, generic `Template`/`TemplateField` model, and an explicit sync.
+- Backend: `db/prisma.ts`, `modules/templates/` (`template-repository.ts`, `prisma-template-repository.ts`, `template-service.ts`), `routes/template-routes.ts` (`POST /templates/sync`, `GET /templates`, `GET /templates/:canvaId`, `GET /templates/:canvaId/thumbnail`), shared `routes/error-handler.ts`. Canva client/service gained pagination (`listAllBrandTemplates`).
+- Prisma migration `20260928151304_init_templates`; Docker backend now runs `prisma migrate deploy` on startup.
+- Frontend: shadcn/ui initialized (radix-nova preset; `button`, `card`, `badge`, `skeleton`); `/templates` library and `/templates/[canvaId]` detail pages; header nav.
+- Verified: live Canva sync returned 2 templates / 4 fields / 2 thumbnails; library + detail UI rendered (screenshots in `docs/evidence/`); Docker backend started and served cached templates. `pnpm typecheck`, `lint`, `test` (9), `build`, `docker compose config` all pass.
+- API research recorded: list + dataset each rate-limited **100 req/min/user**; **thumbnail URLs expire after 15 minutes**; **Autofill has no published quota** (limits "introduced in the future").
 
-- pnpm workspace: `frontend/` (Next.js 16, React, TypeScript, Tailwind) + `backend/` (Fastify, TypeScript).
-- Prisma + PostgreSQL, Docker Compose (postgres/backend/frontend), local-filesystem storage behind `StorageService`.
-- Backend Canva module: `oauth.ts` (PKCE/token), `canva-client.ts` (typed REST client), `token-store.ts`, `canva-service.ts`, `canva-routes.ts` (`/oauth/*`, `/canva/*`).
-- Unit tests (PKCE, authorize URL, token/pending stores, storage traversal) and `docs/evidence/` visual assets.
+**MVP 1 — Canva Integration: COMPLETE and merged** (PR #1 into `main`). OAuth (PKCE) → brand templates → dataset field discovery → autofill → export/download via `StorageService`. Evidence in `docs/mvp1-verification.md`.
 
 ## Next
 
-1. Create the `milestone/mvp2-templates` branch from `main`.
-2. Architect: design the generic template model (Prisma schema — `Template`, `TemplateField`, Canva identifiers) and decide the UI/API surface for the template library.
-3. Implement MVP 2 milestones 2.1–2.6 per `ROADMAP.md` (retrieval, library, selection, field discovery, generic model, synchronization), verifying each.
+1. Independent review of the MVP 2 diff (correctness, security, scope).
+2. Open the MVP 2 PR into `main` with acceptance criteria, known issues, and the visual evidence.
+3. User verification, then merge and update docs/Obsidian per Definition of Done.
 
 ## Constraints
 
@@ -29,20 +31,23 @@ Foundation established in MVP 1:
 - API research is a hard gate; never invent endpoints/permissions/behavior.
 - Clarify before adding anything not explicitly requested.
 - Verification-first; never report completion without evidence.
-- Do not hardcode content categories (birthday/announcement/verse/quote); templates and fields are generic.
-- Canva design fields and publishing metadata are separate concepts.
+- Do not hardcode content categories; templates and fields are generic.
+- Field types are Canva-owned → stored as free-form strings (no enum).
+- Canva remains the source of truth; the app stores a synced local cache.
 - All file access through the storage abstraction.
 - Frontend must not hold platform credentials.
 
 ## Reminders / Notes
 
-- Backend framework: Fastify. Development ports: frontend `3000`, backend `3001`, PostgreSQL `5432`.
-- Canva OAuth callback: `http://127.0.0.1:3001/oauth/callback` (Canva permits `127.0.0.1`; do not use `localhost`).
-- Generated design editing/view links expire after 30 days; Canva export download links expire after 24 hours.
-- Canva Pro Autofill runs under a limited development trial quota (`SUPPORTED WITH LIMITATIONS`).
-- Canva access token is in-memory and lost on restart — re-run OAuth after a backend restart.
-- The Canva Connect API uses a unified "app" model: REST API auth lives under Build → Outside Canva → Configuration and Redirect URLs.
-- Deferred from MVP 1 (track later): `/canva/*` endpoints are not app-authenticated; in-memory token store; pending-auth TTL; template pagination (first 100); `DatasetValue` lacks chart/sheet; env loading is cwd-fragile; `DATABASE_URL` required but unused; stored exports have no read route (needed for MVP 4 Facebook media).
-- The `handoff` skill loads/updates this file; run it on milestone start/finish.
-- Obsidian vault has `Projects/CJCRSG-Flow.md` for durable project memory.
-- Canva/Facebook capability baseline table is in `PROJECT.md` §13; unverified Facebook capabilities must stay out of committed milestones.
+- Backend framework: Fastify. Ports: frontend `3000`, backend `3001`, PostgreSQL `5432` (this machine uses `POSTGRES_PORT` override — see below).
+- **Dev-server caveat:** Brave blocks the Next dev HMR WebSocket on this machine, which prevented client hydration in `next dev`. Verification used the production build (`next build` + `next start` / Docker). A normal browser does not have this issue.
+- Postgres host port is configurable via `POSTGRES_PORT` (compose default `5432`; this machine's local `.env` uses `5434` because `5432`/`5433` are taken by other projects). `DATABASE_URL` must match.
+- Host-based Prisma commands need `DATABASE_URL` exported explicitly (Prisma does not read the repo-root `.env` from the `backend/` cwd).
+- Thumbnails are downloaded into `StorageService` (`thumbnails/<canvaId>`) because Canva thumbnail URLs expire after 15 minutes. Orphan thumbnails are not pruned.
+- Sync fetches each template's dataset sequentially; fine at current scale, parallelize later within the 100 req/min limit.
+- Canva access token is still in-memory; re-run OAuth after a backend restart.
+- Deferred from MVP 1 (still open): `/canva/*` and `/templates/*` are not app-authenticated; in-memory token store; pending-auth TTL; `DatasetValue` lacks chart/sheet; env loading is cwd-fragile; stored exports have no read route (needed for MVP 4 Facebook media).
+- Deferred from MVP 2: prune orphaned thumbnails; delete templates no longer returned by Canva.
+- `handoff` skill loads/updates this file; run it on milestone start/finish.
+- Obsidian vault has `Projects/CJCRSG-Flow.md` for durable project memory (updated with MVP 2 + corrected Autofill quota belief).
+- Canva/Facebook capability baseline table is in `PROJECT.md` §13.

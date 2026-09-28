@@ -1,12 +1,9 @@
 import { randomBytes } from "node:crypto";
 import type { FastifyPluginAsync } from "fastify";
 import type { DatasetValue } from "../modules/canva/canva-client.js";
-import {
-  CanvaService,
-  NotAuthenticatedError,
-  NotConfiguredError,
-} from "../modules/canva/canva-service.js";
+import { CanvaService } from "../modules/canva/canva-service.js";
 import type { StorageService } from "../storage/storage-service.js";
+import { apiErrorHandler } from "./error-handler.js";
 
 interface CanvaRoutesOptions {
   canva: CanvaService;
@@ -51,16 +48,7 @@ const exportSchema = {
 export const canvaRoutes: FastifyPluginAsync<CanvaRoutesOptions> = async (app, options) => {
   const { canva, frontendUrl, storage } = options;
 
-  app.setErrorHandler((error, request, reply) => {
-    if (error instanceof NotConfiguredError) {
-      return reply.status(400).send({ error: error.message });
-    }
-    if (error instanceof NotAuthenticatedError) {
-      return reply.status(401).send({ error: error.message });
-    }
-    request.log.error(error);
-    return reply.status(500).send({ error: "Internal server error." });
-  });
+  app.setErrorHandler(apiErrorHandler);
 
   app.get("/oauth/authorize", async (_request, reply) => {
     const state = randomBytes(16).toString("hex");
@@ -73,19 +61,19 @@ export const canvaRoutes: FastifyPluginAsync<CanvaRoutesOptions> = async (app, o
       const { code, state, error } = request.query;
 
       if (error) {
-        return reply.redirect(`${frontendUrl}/?error=${encodeURIComponent(error)}`);
+        return reply.redirect(`${frontendUrl}/templates?error=${encodeURIComponent(error)}`);
       }
 
       if (!code || !state) {
-        return reply.redirect(`${frontendUrl}/?error=missing_code_or_state`);
+        return reply.redirect(`${frontendUrl}/templates?error=missing_code_or_state`);
       }
 
       try {
         await canva.handleCallback(code, state);
-        return reply.redirect(`${frontendUrl}/?connected=1`);
+        return reply.redirect(`${frontendUrl}/templates?connected=1`);
       } catch (err) {
         request.log.error(err);
-        return reply.redirect(`${frontendUrl}/?error=oauth_failed`);
+        return reply.redirect(`${frontendUrl}/templates?error=oauth_failed`);
       }
     },
   );

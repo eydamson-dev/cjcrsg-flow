@@ -356,7 +356,9 @@ Current project baseline:
 
 Unverified capabilities must not become committed milestones until independently verified against current official documentation.
 
-Canva Pro users can access Autofill under a limited development trial quota. Confirm the available quota and production access policy when connecting the Canva developer integration.
+Canva Pro users can access Autofill. As of the current official Canva documentation, **there is no usage quota or rate limit published for the Autofill APIs** — Canva states that "usage limits will be introduced in the future." Canva reserves the right to add limits later, so this should be re-checked before relying on high volumes.
+
+Canva brand-template **thumbnail URLs expire after 15 minutes**; the application downloads thumbnails into storage during sync rather than storing the temporary URL.
 
 ---
 
