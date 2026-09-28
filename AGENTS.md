@@ -231,6 +231,7 @@ Include:
 * Manual verification
 * Relevant API verification
 * Relevant logs or responses
+* A reproducible test-steps guide (e.g. `docs/<milestone>-verification.md`) so the milestone can be re-verified from a clean environment
 
 ## Evidence
 
@@ -244,6 +245,8 @@ Acceptable evidence includes:
 * Test output
 * API responses
 * Logs
+
+Every milestone PR must include at least one visual asset — a screenshot, GIF, or screen recording — showing the feature working, in addition to any test/API evidence. Commit the visual assets under `docs/evidence/` and reference them from the PR and the milestone verification doc.
 
 UI milestones should preferably include screenshots, GIFs, or video.
 

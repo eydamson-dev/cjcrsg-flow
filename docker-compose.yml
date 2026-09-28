@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: cjcrsg_flow
+      POSTGRES_USER: cjcrsg_flow
+      POSTGRES_PASSWORD: cjcrsg_flow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cjcrsg_flow -d cjcrsg_flow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://cjcrsg_flow:cjcrsg_flow@postgres:5432/cjcrsg_flow?schema=public
+      CORS_ORIGIN: http://127.0.0.1:3000
+      STORAGE_PATH: /app/data/storage
+      CANVA_CLIENT_ID: ${CANVA_CLIENT_ID:-}
+      CANVA_CLIENT_SECRET: ${CANVA_CLIENT_SECRET:-}
+      CANVA_REDIRECT_URI: ${CANVA_REDIRECT_URI:-http://127.0.0.1:3001/oauth/callback}
+    ports:
+      - "3001:3001"
+    volumes:
+      - storage-data:/app/data/storage
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:
+  storage-data:
