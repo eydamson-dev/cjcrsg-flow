@@ -58,7 +58,7 @@ Open http://127.0.0.1:3000 and click **Connect to Canva** to authorize. See `doc
 
 | MVP | Focus                        | Status      |
 | --- | ---------------------------- | ----------- |
-| 1   | Canva integration            | In progress |
+| 1   | Canva integration            | Complete    |
 | 2   | Template management          | Not started |
 | 3   | Content creation & management | Not started |
 | 4   | Facebook publishing          | Not started |
@@ -81,7 +81,7 @@ See `ROADMAP.md` for the full implementation sequence.
 
 ## Status
 
-MVP 1 — foundation scaffold is complete and verified. Canva developer-app setup and the end-to-end Canva workflow are next.
+MVP 1 (Canva integration) complete. Template management (MVP 2) is next.
 
 ## Documentation
 
