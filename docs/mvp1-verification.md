@@ -89,6 +89,11 @@ pnpm --filter backend dev          # reads repo-root .env, listens on :3001
 
 ## Test evidence
 
+### Visual evidence
+
+- ![Generated design](evidence/mvp1-generated-design.png) — the autofilled design `DAHWepMUQ0c` open in Canva.
+- ![Exported asset](evidence/mvp1-exported-asset.png) — the exported PNG obtained via `StorageService` (1080×1350).
+
 ### Automated tests
 
 ```text
