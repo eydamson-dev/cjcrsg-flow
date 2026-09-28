@@ -69,8 +69,9 @@ export default function TemplatesPage() {
     try {
       const result = await syncTemplates();
       const skipped = result.skipped > 0 ? ` (${result.skipped} skipped)` : "";
+      const removed = result.removed > 0 ? `, ${result.removed} removed` : "";
       setSyncMessage(
-        `Synced ${result.templates} template(s), ${result.fields} field(s), ${result.thumbnails} thumbnail(s)${skipped}.`,
+        `Synced ${result.templates} template(s), ${result.fields} field(s), ${result.thumbnails} thumbnail(s)${skipped}${removed}.`,
       );
       await reload();
     } catch (cause) {

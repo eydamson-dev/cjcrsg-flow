@@ -43,4 +43,5 @@ export interface TemplateRepository {
   upsert(data: TemplateUpsert): Promise<void>;
   list(): Promise<TemplateRecord[]>;
   findByCanvaId(canvaId: string): Promise<TemplateRecord | null>;
+  deleteNotIn(canvaIds: string[]): Promise<number>;
 }

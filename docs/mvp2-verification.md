@@ -34,6 +34,9 @@ Verified against the official Canva REST API reference before implementation:
   application stores a local mirror in PostgreSQL (`Template`, `TemplateField`) keyed by Canva ID.
 - **Sync:** one "Sync now" action pulls the full template list (paginated) and each template's
   dataset, then upserts the local cache. Fields are replaced per sync to track Canva deletions.
+- **Tag filter:** only brand templates carrying the Canva keyword `flow-template` are pulled. Canva
+  exposes no dedicated tag filter, so the list request passes `query=flow-template` (full-text
+  search matching title and keywords). Templates not returned are pruned from the local cache.
 - **Field types:** stored as free-form strings (Canva owns the vocabulary and may add types); a
   TypeScript union documents the known values.
 - **Thumbnails:** downloaded to `StorageService` at sync time (`thumbnails/<canvaId>`) and served
@@ -145,29 +148,17 @@ preservation of a cached thumbnail when a download fails, and per-template failu
 
 ### API evidence
 
-`POST /templates/sync` (2.6):
+`POST /templates/sync` (2.6) — with the `flow-template` filter, the untagged template was pruned:
 
 ```json
-{"templates":2,"fields":4,"thumbnails":2,"skipped":0}
+{"templates":2,"fields":7,"thumbnails":2,"skipped":0,"removed":0}
 ```
 
-`GET /templates` (2.1, 2.2, 2.5):
+`GET /templates` (2.1, 2.2, 2.5) — only `flow-template`-tagged templates remain:
 
 ```json
 {
   "items": [
-    {
-      "canvaId": "EAHQ6R8Qfec",
-      "title": "Daniel Faith Tuyor",
-      "thumbnailKey": "thumbnails/EAHQ6R8Qfec",
-      "thumbnailContentType": "image/jpg",
-      "viewUrl": "https://www.canva.com/brand/brand-templates/EAHQ6R8Qfec",
-      "createUrl": "https://www.canva.com/design?create=true&template=EAHQ6R8Qfec",
-      "canvaCreatedAt": "2026-07-31T01:09:59.000Z",
-      "canvaUpdatedAt": "2026-07-31T01:11:38.000Z",
-      "syncedAt": "2026-09-28T15:33:08.980Z",
-      "fields": []
-    },
     {
       "canvaId": "EAHWepv4UXY",
       "title": "test-template-1",
@@ -183,6 +174,15 @@ preservation of a cached thumbnail when a download fails, and per-template failu
         { "name": "heading", "type": "text", "position": 1 },
         { "name": "subheading", "type": "text", "position": 2 },
         { "name": "background-image", "type": "image", "position": 3 }
+      ]
+    },
+    {
+      "canvaId": "EAHWgBgslXY",
+      "title": "test-template-2",
+      "fields": [
+        { "name": "text-area", "type": "text", "position": 0 },
+        { "name": "heading", "type": "text", "position": 1 },
+        { "name": "background-video", "type": "image", "position": 2 }
       ]
     }
   ]
@@ -206,15 +206,18 @@ content-length: 49736
 ```text
    canvaId   |       title        | thumb |        syncedAt
 -------------+--------------------+-------+-------------------------
- EAHQ6R8Qfec | Daniel Faith Tuyor | t     | 2026-09-28 15:33:52.264
  EAHWepv4UXY | test-template-1    | t     | 2026-09-28 15:33:51.865
+ EAHWgBgslXY | test-template-2    | t     | 2026-09-28 15:33:52.264
 
-      title      |      name        | type  | position
------------------+------------------+-------+----------
+       title      |      name        | type  | position
+ -----------------+------------------+-------+----------
  test-template-1 | body             | text  |        0
  test-template-1 | heading          | text  |        1
  test-template-1 | subheading       | text  |        2
  test-template-1 | background-image | image |        3
+ test-template-2 | text-area        | text  |        0
+ test-template-2 | heading          | text  |        1
+ test-template-2 | background-video | image |        2
 ```
 
 Thumbnails stored via `StorageService` under `backend/data/storage/thumbnails/`.
@@ -245,5 +248,6 @@ The Docker backend applies migrations on startup and serves the cached templates
 - Field types remain free-form strings; unknown future Canva types are stored and displayed as-is.
 - Template/thumbnail endpoints remain unauthenticated (private-network assumption, deferred).
 - The Canva access token is still in-memory only; re-authenticate after a backend restart.
-- `POST /templates/sync` removes fields no longer present in a template's dataset, but does not
-  delete a template that Canva no longer returns.
+- The tag filter uses Canva's `query` search (no dedicated tag API); if `flow-template` matches a
+  template's title or keywords, it is pulled. This is the intended behavior, but the match is
+  Canva's search semantics, not an explicit tag lookup.

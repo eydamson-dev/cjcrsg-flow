@@ -13,6 +13,7 @@ import type {
 
 class FakeRepository implements TemplateRepository {
   readonly upserts: TemplateUpsert[] = [];
+  lastDeleteNotIn: string[] | null = null;
 
   async upsert(data: TemplateUpsert): Promise<void> {
     this.upserts.push(data);
@@ -24,6 +25,11 @@ class FakeRepository implements TemplateRepository {
 
   async findByCanvaId(): Promise<TemplateRecord | null> {
     return null;
+  }
+
+  async deleteNotIn(canvaIds: string[]): Promise<number> {
+    this.lastDeleteNotIn = canvaIds;
+    return 0;
   }
 }
 
@@ -101,8 +107,9 @@ describe("TemplateService.sync", () => {
     const service = new TemplateService(source, repository, storage);
     const result = await service.sync();
 
-    expect(result).toEqual({ templates: 1, fields: 2, thumbnails: 0, skipped: 0 });
+    expect(result).toEqual({ templates: 1, fields: 2, thumbnails: 0, skipped: 0, removed: 0 });
     expect(repository.upserts).toHaveLength(1);
+    expect(repository.lastDeleteNotIn).toEqual(["TPL1"]);
 
     const upsert = repository.upserts[0];
     expect(upsert.canvaId).toBe("TPL1");
@@ -156,7 +163,7 @@ describe("TemplateService.sync", () => {
     const service = new TemplateService(source, repository, storage);
     const result = await service.sync({ warn: (obj) => warnings.push(obj) });
 
-    expect(result).toEqual({ templates: 1, fields: 0, thumbnails: 0, skipped: 0 });
+    expect(result).toEqual({ templates: 1, fields: 0, thumbnails: 0, skipped: 0, removed: 0 });
     // Undefined (not null) tells the repository to leave any existing key intact.
     expect(repository.upserts[0].thumbnailKey).toBeUndefined();
     expect(repository.upserts[0].thumbnailContentType).toBeUndefined();
@@ -182,7 +189,7 @@ describe("TemplateService.sync", () => {
     const service = new TemplateService(source, repository, storage);
     const result = await service.sync({ warn: (obj) => warnings.push(obj) });
 
-    expect(result).toEqual({ templates: 2, fields: 1, thumbnails: 0, skipped: 1 });
+    expect(result).toEqual({ templates: 2, fields: 1, thumbnails: 0, skipped: 1, removed: 0 });
     expect(repository.upserts).toHaveLength(1);
     expect(repository.upserts[0].canvaId).toBe("GOOD");
     expect(warnings).toHaveLength(1);

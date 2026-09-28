@@ -24,6 +24,7 @@ export interface SyncResult {
   fields: number;
   thumbnails: number;
   skipped: number;
+  removed: number;
 }
 
 export interface CanvaStatus {

@@ -11,6 +11,7 @@ Working context for the current milestone. Update this file whenever milestone s
 **MVP 2 — Template Management: implemented + live-verified (not yet merged).**
 
 - 2.1–2.6 implemented: paginated template retrieval, local template library, template selection/detail, field discovery, generic `Template`/`TemplateField` model, and an explicit sync.
+- Sync pulls **only** brand templates tagged `flow-template` (via Canva's `query` search, since there is no dedicated tag API) and prunes the local cache of templates no longer returned.
 - Backend: `db/prisma.ts`, `modules/templates/` (`template-repository.ts`, `prisma-template-repository.ts`, `template-service.ts`), `routes/template-routes.ts` (`POST /templates/sync`, `GET /templates`, `GET /templates/:canvaId`, `GET /templates/:canvaId/thumbnail`), shared `routes/error-handler.ts`. Canva client/service gained pagination (`listAllBrandTemplates`).
 - Prisma migration `20260928151304_init_templates`; Docker backend now runs `prisma migrate deploy` on startup.
 - Frontend: shadcn/ui initialized (radix-nova preset; `button`, `card`, `badge`, `skeleton`); `/templates` library and `/templates/[canvaId]` detail pages; header nav.

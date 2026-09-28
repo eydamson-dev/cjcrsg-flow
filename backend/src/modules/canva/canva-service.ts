@@ -12,6 +12,11 @@ import { PendingAuthStore, TokenStore } from "./token-store.js";
 // Safety cap on brand-template pagination (100 templates per page).
 export const MAX_TEMPLATE_PAGES = 20;
 
+// Only brand templates carrying this Canva keyword are pulled into the library.
+// Canva has no dedicated tag filter, so this keyword is passed to the list
+// endpoint's `query` search parameter.
+export const TEMPLATE_SEARCH_QUERY = "flow-template";
+
 export class NotConfiguredError extends Error {
   constructor() {
     super("Canva integration is not configured.");
@@ -128,6 +133,7 @@ export class CanvaService {
       const response: ListBrandTemplatesResponse = await this.client.listBrandTemplates(
         accessToken,
         continuation,
+        TEMPLATE_SEARCH_QUERY,
       );
       templates.push(...response.items);
       continuation = response.continuation;

@@ -97,4 +97,11 @@ export class PrismaTemplateRepository implements TemplateRepository {
       },
     });
   }
+
+  async deleteNotIn(canvaIds: string[]): Promise<number> {
+    const { count } = await this.prisma.template.deleteMany({
+      where: { canvaId: { notIn: canvaIds } },
+    });
+    return count;
+  }
 }

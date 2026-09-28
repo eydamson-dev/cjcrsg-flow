@@ -26,6 +26,7 @@ export interface SyncResult {
   fields: number;
   thumbnails: number;
   skipped: number;
+  removed: number;
 }
 
 interface StoredThumbnail {
@@ -46,6 +47,7 @@ export class TemplateService {
   // rest of the sync continues.
   async sync(log?: SyncLogger): Promise<SyncResult> {
     const templates = await this.canva.listAllBrandTemplates();
+    const returnedIds = templates.map((template) => template.id);
 
     let fieldCount = 0;
     let thumbnailCount = 0;
@@ -81,7 +83,16 @@ export class TemplateService {
       }
     }
 
-    return { templates: templates.length, fields: fieldCount, thumbnails: thumbnailCount, skipped };
+    // Remove cached templates that are no longer in the (filtered) Canva list.
+    const removed = await this.repository.deleteNotIn(returnedIds);
+
+    return {
+      templates: templates.length,
+      fields: fieldCount,
+      thumbnails: thumbnailCount,
+      skipped,
+      removed,
+    };
   }
 
   list(): Promise<TemplateRecord[]> {

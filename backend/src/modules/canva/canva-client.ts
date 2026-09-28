@@ -70,11 +70,15 @@ export class CanvaClient {
   async listBrandTemplates(
     accessToken: string,
     continuation?: string,
+    query?: string,
   ): Promise<ListBrandTemplatesResponse> {
     const url = new URL(`${CANVA_API_BASE}/brand-templates`);
     url.searchParams.set("limit", "100");
     if (continuation) {
       url.searchParams.set("continuation", continuation);
+    }
+    if (query) {
+      url.searchParams.set("query", query);
     }
 
     const response = await fetch(url, {
