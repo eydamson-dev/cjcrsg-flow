@@ -19,9 +19,9 @@ import {
   fetchCanvaStatus,
   listTemplates,
   syncTemplates,
-  thumbnailUrl,
   type Template,
 } from "@/lib/api";
+import { TemplateThumbnail } from "@/components/template-thumbnail";
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[] | null>(null);
@@ -146,14 +146,12 @@ export default function TemplatesPage() {
                   size="sm"
                   className="h-full transition-shadow hover:ring-foreground/25"
                 >
-                  {template.thumbnailKey && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={thumbnailUrl(template.canvaId)}
-                      alt={`${template.title} thumbnail`}
-                      className="aspect-[4/3] w-full object-cover"
-                    />
-                  )}
+                  <TemplateThumbnail
+                    canvaId={template.canvaId}
+                    title={template.title}
+                    hasThumbnail={Boolean(template.thumbnailKey)}
+                    className="aspect-[4/3] w-full object-cover"
+                  />
                   <CardHeader>
                     <CardTitle>{template.title}</CardTitle>
                     <CardDescription>

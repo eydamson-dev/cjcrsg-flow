@@ -38,6 +38,7 @@ Verified against the official Canva REST API reference before implementation:
   TypeScript union documents the known values.
 - **Thumbnails:** downloaded to `StorageService` at sync time (`thumbnails/<canvaId>`) and served
   via `GET /templates/:canvaId/thumbnail`, because Canva thumbnail URLs expire after 15 minutes.
+  Canva sometimes returns the non-standard `image/jpg`; the route normalizes it to `image/jpeg`.
 - **Auth:** template endpoints remain unauthenticated (private-network assumption, deferred from
   MVP 1).
 
@@ -192,7 +193,7 @@ preservation of a cached thumbnail when a download fails, and per-template failu
 
 ```text
 HTTP/1.1 200 OK
-content-type: image/jpg
+content-type: image/jpeg
 x-content-type-options: nosniff
 cache-control: public, max-age=60
 content-length: 49736

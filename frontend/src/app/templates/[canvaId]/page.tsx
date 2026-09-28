@@ -14,7 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, getTemplate, thumbnailUrl, type Template } from "@/lib/api";
+import { ApiError, getTemplate, type Template } from "@/lib/api";
+import { TemplateThumbnail } from "@/components/template-thumbnail";
 
 export default function TemplateDetailPage() {
   const params = useParams<{ canvaId: string }>();
@@ -77,18 +78,12 @@ export default function TemplateDetailPage() {
       ) : template ? (
         <article className="mt-6 grid gap-6 md:grid-cols-[minmax(0,16rem)_1fr]">
           <div>
-            {template.thumbnailKey ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={thumbnailUrl(template.canvaId)}
-                alt={`${template.title} thumbnail`}
-                className="w-full rounded-xl ring-1 ring-foreground/10"
-              />
-            ) : (
-              <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
-                No preview
-              </div>
-            )}
+            <TemplateThumbnail
+              canvaId={template.canvaId}
+              title={template.title}
+              hasThumbnail={Boolean(template.thumbnailKey)}
+              className="aspect-[4/3] w-full rounded-xl ring-1 ring-foreground/10"
+            />
           </div>
 
           <div>
