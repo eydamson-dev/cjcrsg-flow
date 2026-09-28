@@ -231,6 +231,7 @@ Include:
 * Manual verification
 * Relevant API verification
 * Relevant logs or responses
+* A reproducible test-steps guide (e.g. `docs/<milestone>-verification.md`) so the milestone can be re-verified from a clean environment
 
 ## Evidence
 
