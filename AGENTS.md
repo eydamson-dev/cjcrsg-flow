@@ -435,6 +435,8 @@ A milestone is Done only when:
 
 Only then may the milestone be merged.
 
+After the milestone PR is merged and the user confirms the milestone met the Definition of Done, update all required documentation — especially `docs/handoff.md` (via the `handoff` skill) and the Obsidian engineering vault (via the engineering-memory workflow) — to record what was completed and set up the next milestone.
+
 ---
 
 # Token Efficiency
