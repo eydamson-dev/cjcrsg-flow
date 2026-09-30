@@ -58,6 +58,7 @@ export class PrismaTemplateRepository implements TemplateRepository {
     const rows = await this.prisma.template.findMany({
       orderBy: { title: "asc" },
       select: {
+        id: true,
         canvaId: true,
         title: true,
         thumbnailKey: true,
@@ -81,6 +82,7 @@ export class PrismaTemplateRepository implements TemplateRepository {
     return this.prisma.template.findUnique({
       where: { canvaId },
       select: {
+        id: true,
         canvaId: true,
         title: true,
         thumbnailKey: true,

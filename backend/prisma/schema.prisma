@@ -25,6 +25,7 @@ model Template {
   canvaUpdatedAt      DateTime?
   syncedAt            DateTime        @default(now())
   fields              TemplateField[]
+  contents            Content[]
 
   @@map("templates")
 }
@@ -39,4 +40,70 @@ model TemplateField {
 
   @@unique([templateId, name])
   @@map("template_fields")
+}
+
+// MVP 3 — Content Creation & Management.
+// Application-owned records for content created from Canva templates.
+//
+// Content is self-contained: template provenance and field definitions are
+// snapshotted at creation so records survive template-cache pruning (sync
+// deletes unused cache rows) and can be rendered/validated without joining
+// the mutable template cache. The FK is nullable + SetNull for the same
+// reason; templateCanvaId is the durable Canva reference used for Autofill.
+model Content {
+  id     String        @id @default(cuid())
+  status ContentStatus @default(UNFINISHED)
+  // Template provenance (snapshot at creation; does not auto-refresh on re-sync).
+  templateId      String?
+  templateCanvaId String
+  templateTitle   String
+  templateFields  Json // [{ name, type, position }]
+  template        Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  // Submitted field values keyed by field name. Shape mirrors Canva's
+  // DatasetValue: { [name]: { type: "text", text } | { type: "image", assetId } }.
+  fieldValues Json @default("{}")
+
+  // Generated design reference. Replaced on a successful regeneration, kept on
+  // a failed one (do not destroy working output).
+  designId             String?
+  editUrl              String?
+  viewUrl              String?
+  thumbnailKey         String?
+  thumbnailContentType String?
+
+  // Latest Autofill job. Status is Canva-owned -> free-form string.
+  autofillJobId   String?
+  autofillStatus  String? // "in_progress" | "success" | "failed" | null
+  autofillError   Json?   // { code, message } when failed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets ContentAsset[]
+
+  @@index([templateId])
+  @@index([status, updatedAt])
+  @@map("contents")
+}
+
+enum ContentStatus {
+  UNFINISHED
+  DRAFT
+  READY
+}
+
+// Locally retained copies of images uploaded for image-typed fields, so the
+// editor can re-render a previously chosen image after a reload. fieldValues
+// itself stays a pure DatasetValue mirror (asset_id only).
+model ContentAsset {
+  id          String  @id @default(cuid())
+  contentId   String
+  fieldName   String
+  storageKey  String
+  contentType String
+  content     Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, fieldName])
+  @@map("content_assets")
 }

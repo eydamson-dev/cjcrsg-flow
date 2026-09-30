@@ -13,6 +13,7 @@ export interface TemplateFieldRecord {
 }
 
 export interface TemplateRecord {
+  id: string;
   canvaId: string;
   title: string;
   thumbnailKey: string | null;

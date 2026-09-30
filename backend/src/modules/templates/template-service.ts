@@ -103,6 +103,10 @@ export class TemplateService {
     return this.repository.findByCanvaId(canvaId);
   }
 
+  findByCanvaId(canvaId: string): Promise<TemplateRecord | null> {
+    return this.repository.findByCanvaId(canvaId);
+  }
+
   private async storeThumbnail(
     canvaId: string,
     url: string,

@@ -1,5 +1,5 @@
 import type { AppConfig } from "../../config/env.js";
-import { CanvaClient, type BrandTemplate, type BrandTemplateDataset, type DatasetValue, type ExportJobResponse, type AutofillJobResult, type CreateAutofillJobResponse, type ListBrandTemplatesResponse } from "./canva-client.js";
+import { CanvaClient, type BrandTemplate, type BrandTemplateDataset, type DatasetValue, type ExportJobResponse, type AutofillJobResult, type CreateAutofillJobResponse, type ListBrandTemplatesResponse, type CreateAssetUploadJobResponse, type AssetUploadJobResult } from "./canva-client.js";
 import {
   CANVA_SCOPES,
   buildAuthorizationUrl,
@@ -176,6 +176,16 @@ export class CanvaService {
   async getExportJob(jobId: string): Promise<ExportJobResponse> {
     const accessToken = await this.getAccessToken();
     return this.client.getExportJob(accessToken, jobId);
+  }
+
+  async uploadAsset(bytes: Uint8Array, name: string): Promise<CreateAssetUploadJobResponse> {
+    const accessToken = await this.getAccessToken();
+    return this.client.createAssetUploadJob(accessToken, { bytes, name });
+  }
+
+  async getAssetUploadJob(jobId: string): Promise<AssetUploadJobResult> {
+    const accessToken = await this.getAccessToken();
+    return this.client.getAssetUploadJob(accessToken, jobId);
   }
 
   private requireConfigured(): void {

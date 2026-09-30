@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +14,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, getTemplate, type Template } from "@/lib/api";
+import { ApiError, createContent, getTemplate, type Template } from "@/lib/api";
 import { TemplateThumbnail } from "@/components/template-thumbnail";
 
 export default function TemplateDetailPage() {
   const params = useParams<{ canvaId: string }>();
+  const router = useRouter();
   const canvaId = params.canvaId;
 
   const [template, setTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!canvaId) {
@@ -60,6 +62,19 @@ export default function TemplateDetailPage() {
     };
   }, [canvaId]);
 
+  async function handleUseTemplate() {
+    setCreating(true);
+    setError(null);
+
+    try {
+      const record = await createContent(canvaId);
+      router.push(`/content/${record.id}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Failed to create content.");
+      setCreating(false);
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
@@ -91,6 +106,10 @@ export default function TemplateDetailPage() {
               {template.title}
             </h1>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Button onClick={() => void handleUseTemplate()} disabled={creating}>
+                {creating ? <Loader2 className="animate-spin" /> : <Plus />}
+                {creating ? "Creating…" : "Use template"}
+              </Button>
               {template.viewUrl && (
                 <Button asChild variant="outline" size="sm">
                   <a href={template.viewUrl} target="_blank" rel="noreferrer">

@@ -33,4 +33,16 @@ describe("LocalFilesystemStorage", () => {
       "Storage key must resolve inside the storage directory.",
     );
   });
+
+  it("deletes stored content and tolerates missing objects", async () => {
+    temporaryDirectory = await mkdtemp(join(tmpdir(), "cjcrsg-flow-"));
+    const storage = new LocalFilesystemStorage(temporaryDirectory);
+
+    await storage.write("exports/design.png", new TextEncoder().encode("image"));
+    await storage.delete("exports/design.png");
+
+    await expect(storage.read("exports/design.png")).rejects.toThrow();
+    // Deleting a missing object must not throw.
+    await expect(storage.delete("exports/other.png")).resolves.toBeUndefined();
+  });
 });

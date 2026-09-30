@@ -4,6 +4,8 @@ export const CANVA_AUTHORIZE_URL = "https://www.canva.com/api/oauth/authorize";
 export const CANVA_TOKEN_URL = "https://api.canva.com/rest/v1/oauth/token";
 
 export const CANVA_SCOPES = [
+  "asset:read",
+  "asset:write",
   "brandtemplate:content:read",
   "brandtemplate:meta:read",
   "design:content:read",

@@ -2,18 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import type { TemplateService } from "../modules/templates/template-service.js";
 import type { StorageService } from "../storage/storage-service.js";
 import { apiErrorHandler } from "./error-handler.js";
-
-// Canva sometimes returns the non-standard "image/jpg"; normalize to a valid
-// MIME type so browsers (especially under nosniff) render it correctly.
-function normalizeImageContentType(contentType: string | null): string {
-  const normalized = contentType?.toLowerCase();
-
-  if (normalized === "image/jpg") {
-    return "image/jpeg";
-  }
-
-  return normalized && normalized.startsWith("image/") ? normalized : "image/png";
-}
+import { normalizeImageContentType } from "./image-content-type.js";
 
 interface TemplateRoutesOptions {
   templates: TemplateService;

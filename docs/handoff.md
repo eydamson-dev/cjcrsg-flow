@@ -4,9 +4,24 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 3 — Content Creation & Management** — NOT STARTED. Create and manage content generated from Canva templates: dynamic forms from discovered fields, Canva Autofill generation, "Edit in Canva", content persistence, content library, and a content status workflow (Unfinished → Draft → Ready). See `ROADMAP.md` §MVP 3.
+**MVP 3 — Content Creation & Management** — IMPLEMENTED, awaiting live-Canva verification + review + user verification. Branch `milestone/mvp3-content`. Content created from templates (snapshot provenance), dynamic text/image forms, Autofill generation with poll-driven finalize, "Edit in Canva", status workflow (Unfinished → Draft → Ready), library with filters, delete. Backend + frontend verified (31 unit tests, API lifecycle smoke, browser verification via chrome-devtools MCP — found & fixed two bugs: CORS PUT/DELETE and Fastify 415 on binary uploads).
+
+Locked decisions (user-approved, do not revisit):
+- Image fields via Canva asset upload are IN SCOPE (`asset:read` + `asset:write` added to `CANVA_SCOPES`; needs portal enable + one re-auth).
+- Field values stored as JSONB on Content; ContentAsset rows store local image copies for preview.
+- Status: UNFINISHED = created-from-template, never saved; DRAFT = any "save draft" (never blocked); READY = explicit "save as ready", guarded (all text/image fields valid + design generated). Status changes only via explicit actions; demote READY→DRAFT on save draft.
+- Content delete in scope. Library views: All / Unfinished / Drafts / Ready.
+- "Use template" on template detail creates the UNFINISHED record and opens the editor.
+- Ready-guard treats every text/image field as required; chart/sheet excluded (template default).
 
 ## Done
+
+**MVP 3 — Content Creation & Management:** implemented on `milestone/mvp3-content` (3 commits) and browser-verified via chrome-devtools MCP.
+- Backend: `Content`/`ContentStatus`/`ContentAsset` models (snapshot provenance), Content module (repository → prisma → service → routes), generation with poll-driven once-guarded finalize + thumbnail storage, raw-binary image upload → Canva asset + local copy, StorageService.delete, shared image content-type helper.
+- Research gate (api-researcher): asset upload SUPPORTED (POST /rest/v1/asset-uploads, asset:read+asset:write, 15-min thumbnails, partial autofill keeps template defaults). `PROJECT.md` §13 updated.
+- Frontend: `/content` library (filters + delete), `/content/[id]` editor (dynamic form, generate/poll, Edit in Canva, save draft/ready), "Use template" entry, nav link.
+- Verification: 37 backend tests (27 new), lint+typecheck clean both apps, production build OK, API lifecycle smoke OK, browser flow OK (create → draft → ready-guard → filter → delete; upload/generate error paths). **Live Canva verification COMPLETE**: real image upload → asset + preview; Autofill generation → design reference + thumbnail + Edit/View in Canva; all fields + design → READY. Evidence in `docs/evidence/mvp3-content-*.png`.
+- Two bugs found via browser verification and fixed: CORS methods (PUT/DELETE) + Fastify 415 on binary uploads (wildcard parser).
 
 **MVP 2 — Template Management: COMPLETE and merged** (PR #2 into `main`). Templates tagged `flow-template` are pulled from Canva into a local PostgreSQL cache (paginated), the library and detail views render them with thumbnails, and an explicit sync refreshes and prunes the cache. Evidence and reproducible steps in `docs/mvp2-verification.md`.
 
@@ -19,9 +34,8 @@ Foundation in place:
 
 ## Next
 
-1. Create the `milestone/mvp3-content` branch from `main`.
-2. Architect: design the content model (Prisma — `Content`, `ContentFieldValue`, `CanvaDesignReference`, status enum) and the dynamic-form UI approach. API research gate for anything new (Autofill job lifecycle is verified; check design-update mode if needed).
-3. Implement MVP 3 milestones 3.1–3.6 per `ROADMAP.md`, verifying each.
+1. Reviewer pass COMPLETE (no blockers; M1 error-banner bug + M2 unbounded polling fixed and re-verified in-browser).
+2. PR `milestone/mvp3-content` → `main` with acceptance criteria, evidence, and `docs/mvp3-verification.md`; hard stop for user verification.
 
 ## Constraints
 
@@ -37,6 +51,10 @@ Foundation in place:
 - Only templates tagged `flow-template` are pulled (Canva `query` search; no dedicated tag API).
 
 ## Reminders / Notes
+
+- **File-upload UX gotcha (chrome-devtools MCP):** in a tab driven by the MCP, an earlier automated `upload_file` call enables file-chooser interception, so the native OS file picker stops appearing for real human clicks in that tab (symptom: click does nothing, no console error; the click still focuses the input). Test real user clicks in a fresh tab/window — not the tab the agent drove. The image input uses a `<label htmlFor>` + `sr-only` input (robust + fixes the label a11y warning).
+
+- **PR descriptions must carry the verification steps inline** (commands, click-through, expected results) and the evidence links — the user verifies directly from the PR page. A linked `docs/<milestone>-verification.md` is a supplement, not a substitute. AGENTS.md now says so explicitly.
 
 - Backend framework: Fastify. Ports: frontend `3000`, backend `3001`, PostgreSQL `5432` (this machine uses `POSTGRES_PORT` override — see below).
 - **Dev-server caveat:** Brave blocks the Next dev HMR WebSocket on this machine, which prevented client hydration in `next dev`. Verification used the production build (`next build` + `next start` / Docker). A normal browser does not have this issue.
