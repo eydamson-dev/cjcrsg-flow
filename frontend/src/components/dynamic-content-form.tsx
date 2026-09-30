@@ -1,9 +1,10 @@
 "use client";
 
-import { ChangeEvent, useRef } from "react";
+import { ChangeEvent, useId } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { contentAssetUrl, type ContentFieldValue, type TemplateField } from "@/lib/api";
@@ -109,7 +110,7 @@ function ImageField({
   onChange: (fieldName: string, value: ContentFieldValue | null) => void;
   onUploadImage: (fieldName: string, file: File) => Promise<void>;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -124,22 +125,13 @@ function ImageField({
 
   return (
     <div className="space-y-1.5">
-      <Label>
+      <Label htmlFor={inputId}>
         <span className="font-mono">{field.name}</span>
         <Badge variant="outline" className="ml-1">
           image
         </Badge>
       </Label>
       <div className="flex items-start gap-4">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          aria-label={`Upload image for ${field.name}`}
-          onChange={handleChange}
-          disabled={uploading}
-        />
         <div className="flex-1 space-y-2">
           {hasImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -154,16 +146,28 @@ function ImageField({
             </div>
           )}
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={uploading}
-              onClick={() => inputRef.current?.click()}
+            {/* A <label> associated with the hidden file input opens the native
+                file picker without a programmatic click(), which is the most
+                compatible approach across browsers. */}
+            <label
+              htmlFor={inputId}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "cursor-pointer",
+                uploading && "pointer-events-none opacity-50",
+              )}
             >
               {uploading ? <Loader2 className="animate-spin" /> : <ImagePlus />}
               {uploading ? "Uploading…" : hasImage ? "Replace" : "Choose image"}
-            </Button>
+            </label>
+            <input
+              id={inputId}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleChange}
+              disabled={uploading}
+            />
             {hasImage && (
               <Button
                 type="button"
