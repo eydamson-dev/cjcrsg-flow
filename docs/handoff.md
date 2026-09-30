@@ -4,19 +4,13 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 3 — Content Creation & Management** — IMPLEMENTED, awaiting live-Canva verification + review + user verification. Branch `milestone/mvp3-content`. Content created from templates (snapshot provenance), dynamic text/image forms, Autofill generation with poll-driven finalize, "Edit in Canva", status workflow (Unfinished → Draft → Ready), library with filters, delete. Backend + frontend verified (31 unit tests, API lifecycle smoke, browser verification via chrome-devtools MCP — found & fixed two bugs: CORS PUT/DELETE and Fastify 415 on binary uploads).
+**MVP 4 — Facebook Publishing** — NOT STARTED. Publish Ready content immediately to a connected Facebook Page: Facebook page connection (auth + permissions + page identification), publishing configuration (caption + target page + immediate publish), programmatic preparation of the generated Canva design as media (no manual download), and a Ready → Publishing → Published/Failed status workflow that records the Facebook Post ID, timestamp, and failure info. See `ROADMAP.md` §MVP 4.
 
-Locked decisions (user-approved, do not revisit):
-- Image fields via Canva asset upload are IN SCOPE (`asset:read` + `asset:write` added to `CANVA_SCOPES`; needs portal enable + one re-auth).
-- Field values stored as JSONB on Content; ContentAsset rows store local image copies for preview.
-- Status: UNFINISHED = created-from-template, never saved; DRAFT = any "save draft" (never blocked); READY = explicit "save as ready", guarded (all text/image fields valid + design generated). Status changes only via explicit actions; demote READY→DRAFT on save draft.
-- Content delete in scope. Library views: All / Unfinished / Drafts / Ready.
-- "Use template" on template detail creates the UNFINISHED record and opens the editor.
-- Ready-guard treats every text/image field as required; chart/sheet excluded (template default).
+**API research gate required before implementation** (Meta Graph API — never assume): page-connection scopes/permissions (e.g. `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`), the page access-token flow, photo upload vs `/page/feed` publishing, immediate-publish behavior, and any limitations (e.g. scheduled-post support is MVP 5, keep separate).
 
 ## Done
 
-**MVP 3 — Content Creation & Management:** implemented on `milestone/mvp3-content` (3 commits) and browser-verified via chrome-devtools MCP.
+**MVP 3 — Content Creation & Management: COMPLETE and merged** (PR #3 into `main`).
 - Backend: `Content`/`ContentStatus`/`ContentAsset` models (snapshot provenance), Content module (repository → prisma → service → routes), generation with poll-driven once-guarded finalize + thumbnail storage, raw-binary image upload → Canva asset + local copy, StorageService.delete, shared image content-type helper.
 - Research gate (api-researcher): asset upload SUPPORTED (POST /rest/v1/asset-uploads, asset:read+asset:write, 15-min thumbnails, partial autofill keeps template defaults). `PROJECT.md` §13 updated.
 - Frontend: `/content` library (filters + delete), `/content/[id]` editor (dynamic form, generate/poll, Edit in Canva, save draft/ready), "Use template" entry, nav link.
@@ -34,8 +28,10 @@ Foundation in place:
 
 ## Next
 
-1. Reviewer pass COMPLETE (no blockers; M1 error-banner bug + M2 unbounded polling fixed and re-verified in-browser).
-2. PR `milestone/mvp3-content` → `main` with acceptance criteria, evidence, and `docs/mvp3-verification.md`; hard stop for user verification.
+1. Create the `milestone/mvp4-facebook` branch from `main`.
+2. **API research gate (api-researcher):** verify Meta Graph API page publishing — required scopes/permissions, page access-token flow, photo upload vs `/page/feed`, immediate publish, and limitations. Record results in `PROJECT.md` §13.
+3. Architect: publishing model (`Publication` + `FacebookPage` entities, Ready → Publishing → Published/Failed), the export → upload path (reuse the MVP 1 export/download via `StorageService`; add a stored-export read route — deferred from MVP 1 and required here), and frontend publishing UI.
+4. Implement 4.1–4.5 per `ROADMAP.md`, verifying each; then PR with inline steps + embedded evidence.
 
 ## Constraints
 
