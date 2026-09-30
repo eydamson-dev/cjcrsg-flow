@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ExternalLink, Loader2, Play, Save, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,13 @@ export default function ContentEditorPage() {
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [uploading, setUploading] = useState<Set<string>>(new Set());
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,12 +187,28 @@ export default function ContentEditorPage() {
       await saveContentDraft(id, values);
       await generateContentDesign(id);
 
+      // Bound the poll loop (~2 minutes) and stop on unmount.
+      const MAX_POLLS = 60;
+      let polls = 0;
+
       for (;;) {
+        if (!mountedRef.current) {
+          return;
+        }
+
         const status = await pollContentGeneration(id);
 
-        if (status.status === "in_progress") {
+        if (status.status === "in_progress" && polls < MAX_POLLS) {
+          polls += 1;
           await delay(2000);
           continue;
+        }
+
+        if (status.status === "in_progress") {
+          setGenerationError(
+            "Generation is taking longer than expected. Reopen the editor to continue.",
+          );
+          break;
         }
 
         if (status.status === "failed") {
@@ -261,12 +284,7 @@ export default function ContentEditorPage() {
             </Button>
           </div>
 
-          {error && !missing && (
-            <p className="mt-6 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          {error && Object.keys(missing).length > 0 && (
+          {error && (
             <p className="mt-6 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
             </p>

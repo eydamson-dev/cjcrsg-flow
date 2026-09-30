@@ -26,7 +26,7 @@ Result (this milestone):
 
 ```text
 Test Files  5 passed (5)
-Tests       31 passed (31)   # includes 22 new Content module tests
+Tests       37 passed (37)   # includes 27 new Content/storage tests
 ```
 
 Frontend (`frontend/`):
@@ -89,15 +89,22 @@ Verified against the production build (`next build` + `next start`, backend on
 8. **Library filter + delete** — item appears under All/Drafts; delete asks for
    confirmation and removes the record.
 
-## Live Canva checks (pending user action)
+## Live Canva checks (complete)
 
-Requires the Canva authorization renewal described above:
+Executed against a real Canva Pro account (scopes `asset:read` + `asset:write`
+enabled and re-authorized):
 
-- Upload a real image for an image field → asset id stored, preview served
-  from `GET /content/:id/assets/:fieldName`.
-- Generate a design → job polled to success → design reference + thumbnail
-  persisted → "Edit in Canva" link opens the editor.
-- Mark ready after generation + all fields → status READY.
+- **Image upload** — real PNG uploaded for an image field: Canva asset created,
+  asset id stored, local copy kept for preview
+  (`docs/evidence/mvp3-content-image-upload.png`).
+- **Generate** — Autofill job created and polled to success; design reference,
+  edit/view URLs, and the downloaded design thumbnail persisted; "Edit in
+  Canva"/"View in Canva" links render
+  (`docs/evidence/mvp3-content-design-generated.png`).
+- **Mark ready** — with all text/image fields filled and a design generated,
+  status moves to READY (`docs/evidence/mvp3-content-ready.png`).
+- **Library** — the READY item shows its generated design thumbnail
+  (`docs/evidence/mvp3-content-library-ready.png`).
 
 ## Known issues / notes
 

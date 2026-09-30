@@ -20,7 +20,7 @@ Locked decisions (user-approved, do not revisit):
 - Backend: `Content`/`ContentStatus`/`ContentAsset` models (snapshot provenance), Content module (repository → prisma → service → routes), generation with poll-driven once-guarded finalize + thumbnail storage, raw-binary image upload → Canva asset + local copy, StorageService.delete, shared image content-type helper.
 - Research gate (api-researcher): asset upload SUPPORTED (POST /rest/v1/asset-uploads, asset:read+asset:write, 15-min thumbnails, partial autofill keeps template defaults). `PROJECT.md` §13 updated.
 - Frontend: `/content` library (filters + delete), `/content/[id]` editor (dynamic form, generate/poll, Edit in Canva, save draft/ready), "Use template" entry, nav link.
-- Verification: 31 backend tests (22 new), lint+typecheck clean both apps, production build OK, API lifecycle smoke OK, browser flow OK (create → draft → ready-guard → filter → delete; upload/generate error paths).
+- Verification: 37 backend tests (27 new), lint+typecheck clean both apps, production build OK, API lifecycle smoke OK, browser flow OK (create → draft → ready-guard → filter → delete; upload/generate error paths). **Live Canva verification COMPLETE**: real image upload → asset + preview; Autofill generation → design reference + thumbnail + Edit/View in Canva; all fields + design → READY. Evidence in `docs/evidence/mvp3-content-*.png`.
 - Two bugs found via browser verification and fixed: CORS methods (PUT/DELETE) + Fastify 415 on binary uploads (wildcard parser).
 
 **MVP 2 — Template Management: COMPLETE and merged** (PR #2 into `main`). Templates tagged `flow-template` are pulled from Canva into a local PostgreSQL cache (paginated), the library and detail views render them with thumbnails, and an explicit sync refreshes and prunes the cache. Evidence and reproducible steps in `docs/mvp2-verification.md`.
@@ -34,10 +34,8 @@ Foundation in place:
 
 ## Next
 
-1. **User action:** enable `asset:read` + `asset:write` in the Canva Developer Portal (Outside Canva > Configuration > Scopes) and re-run "Connect to Canva" once.
-2. Live-Canva verification: image upload (asset id + preview), generate design (job poll → design ref + thumbnail → Edit in Canva), mark ready with all fields.
-3. Reviewer pass over the Content module + frontend.
-4. PR `milestone/mvp3-content` → `main` with acceptance criteria, evidence (`docs/evidence/mvp3-content-*.png`), and `docs/mvp3-verification.md`; hard stop for user verification.
+1. Reviewer pass COMPLETE (no blockers; M1 error-banner bug + M2 unbounded polling fixed and re-verified in-browser).
+2. PR `milestone/mvp3-content` → `main` with acceptance criteria, evidence, and `docs/mvp3-verification.md`; hard stop for user verification.
 
 ## Constraints
 

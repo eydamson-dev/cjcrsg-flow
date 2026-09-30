@@ -10,6 +10,7 @@ import type { StorageService, StoredObject } from "../../storage/storage-service
 import {
   ContentService,
   ContentValidationError,
+  MAX_IMAGE_BYTES,
   type ContentCanvaSource,
   type TemplateLookup,
 } from "./content-service.js";
@@ -359,6 +360,22 @@ describe("ContentService.saveReady", () => {
 
     expect(ready.status).toBe("READY");
   });
+
+  it("is idempotent when already READY", async () => {
+    const { repository, service } = makeHarness();
+    const created = await service.create("canvaTpl-1");
+    const record = repository.records.get(created.id)!;
+    record.fieldValues = {
+      TITLE: { type: "text", text: "Hello" },
+      PHOTO: { type: "image", assetId: "A1" },
+    };
+    record.designId = "design-1";
+    record.status = "READY";
+
+    const ready = await service.saveReady(created.id);
+
+    expect(ready.status).toBe("READY");
+  });
 });
 
 describe("ContentService.generate", () => {
@@ -471,6 +488,30 @@ describe("ContentService.reconcileGeneration", () => {
     expect(second.status).toBe("success");
     expect(repository.finalizeCalls).toHaveLength(1);
   });
+
+  it("finalizes success without a thumbnail when the job result has none", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no fetch needed")));
+    const { canva, repository, service } = makeHarness();
+    const created = await service.create("canvaTpl-1");
+    await repository.startGeneration(created.id, "job-1");
+    canva.autofillResult = {
+      job: {
+        id: "job-1",
+        status: "success",
+        result: {
+          type: "create_design",
+          design: { id: "design-1", urls: { edit_url: "e", view_url: "v" } },
+        },
+      },
+    };
+
+    const status = await service.reconcileGeneration(created.id);
+    const record = repository.records.get(created.id)!;
+
+    expect(status.status).toBe("success");
+    expect(record.designId).toBe("design-1");
+    expect(record.thumbnailKey).toBeNull();
+  });
 });
 
 describe("ContentService.uploadImage", () => {
@@ -490,6 +531,30 @@ describe("ContentService.uploadImage", () => {
     await expect(
       service.uploadImage(created.id, "PHOTO", new Uint8Array([1]), "application/pdf", "x.pdf"),
     ).rejects.toThrow(ContentValidationError);
+  });
+
+  it("rejects SVG uploads", async () => {
+    const { service } = makeHarness();
+    const created = await service.create("canvaTpl-1");
+    await expect(
+      service.uploadImage(created.id, "PHOTO", new Uint8Array([1]), "image/svg+xml", "x.svg"),
+    ).rejects.toThrow(ContentValidationError);
+  });
+
+  it("rejects empty uploads", async () => {
+    const { service } = makeHarness();
+    const created = await service.create("canvaTpl-1");
+    await expect(
+      service.uploadImage(created.id, "PHOTO", new Uint8Array(0), "image/png", "x.png"),
+    ).rejects.toThrow("Uploaded file is empty");
+  });
+
+  it("rejects oversized uploads", async () => {
+    const { service } = makeHarness();
+    const created = await service.create("canvaTpl-1");
+    await expect(
+      service.uploadImage(created.id, "PHOTO", new Uint8Array(MAX_IMAGE_BYTES + 1), "image/png", "x.png"),
+    ).rejects.toThrow(/MB limit/);
   });
 
   it("uploads, keeps a local copy and records the asset", async () => {
@@ -543,5 +608,43 @@ describe("ContentService.delete", () => {
   it("returns false for unknown content", async () => {
     const { service } = makeHarness();
     expect(await service.delete("missing")).toBe(false);
+  });
+});
+
+describe("finalizeGeneration contract", () => {
+  it("does not finalize a superseded or already-terminal job", async () => {
+    const { repository } = makeHarness();
+    const created = await repository.create({
+      templateId: "tpl-1",
+      templateCanvaId: "c",
+      templateTitle: "T",
+      templateFields: [],
+    });
+    await repository.startGeneration(created.id, "job-A");
+    const design = {
+      designId: "d",
+      editUrl: null,
+      viewUrl: null,
+      thumbnailKey: null,
+      thumbnailContentType: null,
+    };
+
+    // Superseded job (stored job is job-A, caller still holds an older one).
+    let result = await repository.finalizeGeneration(created.id, "job-OLD", {
+      status: "success",
+      design,
+    });
+    expect(result.transitioned).toBe(false);
+
+    // Terminal job: a second finalize must not overwrite.
+    result = await repository.finalizeGeneration(created.id, "job-A", { status: "success", design });
+    expect(result.transitioned).toBe(true);
+    result = await repository.finalizeGeneration(created.id, "job-A", {
+      status: "failed",
+      error: { code: "x", message: "y" },
+    });
+    expect(result.transitioned).toBe(false);
+    expect(repository.records.get(created.id)!.autofillStatus).toBe("success");
+    expect(repository.records.get(created.id)!.designId).toBe("d");
   });
 });

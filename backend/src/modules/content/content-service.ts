@@ -206,7 +206,7 @@ export class ContentService {
       }
 
       const thumbnail = await this.storeDesignThumbnail(designId, design?.thumbnail?.url);
-      await this.removeOldThumbnail(record);
+      await this.removeOldThumbnail(record, thumbnail?.storageKey ?? null);
       await this.finalize(id, record.autofillJobId, {
         status: "success",
         design: {
@@ -252,7 +252,7 @@ export class ContentService {
       throw new ContentValidationError(`"${fieldName}" is not an image field.`);
     }
 
-    if (!contentType.startsWith("image/")) {
+    if (!contentType.startsWith("image/") || contentType.toLowerCase().includes("svg")) {
       throw new ContentValidationError("Only image files can be uploaded.");
     }
 
@@ -274,6 +274,13 @@ export class ContentService {
     }
 
     const stored = await this.storeImageBytes(id, fieldName, bytes, contentType);
+
+    // Replacing an image orphans the previous local copy; drop it best-effort.
+    const previous = await this.repository.findAsset(id, fieldName);
+    if (previous && previous.storageKey !== stored.storageKey) {
+      await this.storage.delete(previous.storageKey).catch(() => undefined);
+    }
+
     await this.repository.upsertAsset(id, fieldName, stored);
 
     return { assetId: result.job.asset.id, fieldName };
@@ -362,8 +369,8 @@ export class ContentService {
     return { storageKey, contentType };
   }
 
-  private async removeOldThumbnail(record: ContentRecord): Promise<void> {
-    if (record.thumbnailKey) {
+  private async removeOldThumbnail(record: ContentRecord, newKey: string | null): Promise<void> {
+    if (record.thumbnailKey && record.thumbnailKey !== newKey) {
       await this.storage.delete(record.thumbnailKey).catch(() => undefined);
     }
   }
