@@ -4,16 +4,24 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 3 — Content Creation & Management** — IN PROGRESS on `milestone/mvp3-content`. Create and manage content generated from Canva templates: dynamic forms from discovered fields (text + image upload), Canva Autofill generation, "Edit in Canva", content persistence, content library, delete, and a content status workflow (Unfinished → Draft → Ready). See `ROADMAP.md` §MVP 3.
+**MVP 3 — Content Creation & Management** — IMPLEMENTED, awaiting live-Canva verification + review + user verification. Branch `milestone/mvp3-content`. Content created from templates (snapshot provenance), dynamic text/image forms, Autofill generation with poll-driven finalize, "Edit in Canva", status workflow (Unfinished → Draft → Ready), library with filters, delete. Backend + frontend verified (31 unit tests, API lifecycle smoke, browser verification via chrome-devtools MCP — found & fixed two bugs: CORS PUT/DELETE and Fastify 415 on binary uploads).
 
 Locked decisions (user-approved, do not revisit):
-- Image fields via Canva asset upload are IN SCOPE (`asset:write` scope is NOT yet in `oauth.ts` — needs portal enable + re-consent).
-- Field values stored as JSONB on Content (shapes mirror Canva DatasetValue).
-- Status: UNFINISHED = created-from-template, never saved; DRAFT = any "save draft" (never blocked); READY = explicit "save as ready", guarded (all fields valid + design generated). Status changes only via explicit actions; saving a draft on a READY item demotes to DRAFT.
-- Content delete is in scope. Library views: All / Unfinished / Drafts / Ready.
+- Image fields via Canva asset upload are IN SCOPE (`asset:read` + `asset:write` added to `CANVA_SCOPES`; needs portal enable + one re-auth).
+- Field values stored as JSONB on Content; ContentAsset rows store local image copies for preview.
+- Status: UNFINISHED = created-from-template, never saved; DRAFT = any "save draft" (never blocked); READY = explicit "save as ready", guarded (all text/image fields valid + design generated). Status changes only via explicit actions; demote READY→DRAFT on save draft.
+- Content delete in scope. Library views: All / Unfinished / Drafts / Ready.
 - "Use template" on template detail creates the UNFINISHED record and opens the editor.
+- Ready-guard treats every text/image field as required; chart/sheet excluded (template default).
 
 ## Done
+
+**MVP 3 — Content Creation & Management:** implemented on `milestone/mvp3-content` (3 commits) and browser-verified via chrome-devtools MCP.
+- Backend: `Content`/`ContentStatus`/`ContentAsset` models (snapshot provenance), Content module (repository → prisma → service → routes), generation with poll-driven once-guarded finalize + thumbnail storage, raw-binary image upload → Canva asset + local copy, StorageService.delete, shared image content-type helper.
+- Research gate (api-researcher): asset upload SUPPORTED (POST /rest/v1/asset-uploads, asset:read+asset:write, 15-min thumbnails, partial autofill keeps template defaults). `PROJECT.md` §13 updated.
+- Frontend: `/content` library (filters + delete), `/content/[id]` editor (dynamic form, generate/poll, Edit in Canva, save draft/ready), "Use template" entry, nav link.
+- Verification: 31 backend tests (22 new), lint+typecheck clean both apps, production build OK, API lifecycle smoke OK, browser flow OK (create → draft → ready-guard → filter → delete; upload/generate error paths).
+- Two bugs found via browser verification and fixed: CORS methods (PUT/DELETE) + Fastify 415 on binary uploads (wildcard parser).
 
 **MVP 2 — Template Management: COMPLETE and merged** (PR #2 into `main`). Templates tagged `flow-template` are pulled from Canva into a local PostgreSQL cache (paginated), the library and detail views render them with thumbnails, and an explicit sync refreshes and prunes the cache. Evidence and reproducible steps in `docs/mvp2-verification.md`.
 
@@ -26,9 +34,10 @@ Foundation in place:
 
 ## Next
 
-1. ⏳ API research gate (api-researcher running): Canva asset upload (endpoint/headers/scopes/limits), design thumbnail expiry, partial (omitted-field) autofill behavior.
-2. ⏳ Architect (running): content model design — Prisma schema, Content module layout, REST API, JSONB shape, status guards, frontend structure.
-3. Review both, then implement MVP 3 milestones 3.1–3.6 per `ROADMAP.md`, verifying each.
+1. **User action:** enable `asset:read` + `asset:write` in the Canva Developer Portal (Outside Canva > Configuration > Scopes) and re-run "Connect to Canva" once.
+2. Live-Canva verification: image upload (asset id + preview), generate design (job poll → design ref + thumbnail → Edit in Canva), mark ready with all fields.
+3. Reviewer pass over the Content module + frontend.
+4. PR `milestone/mvp3-content` → `main` with acceptance criteria, evidence (`docs/evidence/mvp3-content-*.png`), and `docs/mvp3-verification.md`; hard stop for user verification.
 
 ## Constraints
 

@@ -346,6 +346,7 @@ Current project baseline:
 | Generate design from Canva template                              | SUPPORTED  |
 | Open generated Canva design in Canva                             | SUPPORTED  |
 | Export Canva design programmatically                             | SUPPORTED  |
+| Canva asset upload (images)                                      | SUPPORTED  |
 | Facebook Page publishing                                         | SUPPORTED  |
 | Facebook scheduled Page publishing                               | SUPPORTED  |
 | Facebook scheduled-post status information                       | SUPPORTED  |
@@ -359,6 +360,10 @@ Unverified capabilities must not become committed milestones until independently
 Canva Pro users can access Autofill. As of the current official Canva documentation, **there is no usage quota or rate limit published for the Autofill APIs** — Canva states that "usage limits will be introduced in the future." Canva reserves the right to add limits later, so this should be re-checked before relying on high volumes.
 
 Canva brand-template **thumbnail URLs expire after 15 minutes**; the application downloads thumbnails into storage during sync rather than storing the temporary URL.
+
+Generated-design thumbnails expire on the same 15-minute schedule and are downloaded into storage at generation time.
+
+Image upload uses `POST /rest/v1/asset-uploads` (raw binary body + `Asset-Upload-Metadata: {"name_base64": ...}` header; images < 50 MB) with a job-based poll (`GET /rest/v1/asset-uploads/{jobId}`). It requires the **`asset:read` and `asset:write` scopes** — the scopes are not cumulative and both must be enabled in the Developer Portal and in the app's authorization request. Rate limits: asset uploads 30/min create, 180/min poll; Autofill 60/min create, 120/min poll.
 
 ---
 
