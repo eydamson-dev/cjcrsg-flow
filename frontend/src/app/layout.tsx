@@ -32,6 +32,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <nav className="flex items-center gap-4 text-sm">
               <Link
+                href="/content"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Content
+              </Link>
+              <Link
                 href="/templates"
                 className="text-muted-foreground transition-colors hover:text-foreground"
               >
