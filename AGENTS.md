@@ -205,6 +205,8 @@ Do not merge an incomplete milestone.
 
 # Pull Request Requirements
 
+> When preparing a milestone PR, load the `milestone-pr` skill (`.opencode/skills/milestone-pr/SKILL.md`) — it encodes the inline-steps + embedded-images workflow below.
+
 Every MVP milestone PR must contain:
 
 ## Milestone
