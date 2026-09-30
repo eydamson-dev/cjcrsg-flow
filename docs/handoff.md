@@ -52,6 +52,8 @@ Foundation in place:
 
 ## Reminders / Notes
 
+- **PR descriptions must carry the verification steps inline** (commands, click-through, expected results) and the evidence links — the user verifies directly from the PR page. A linked `docs/<milestone>-verification.md` is a supplement, not a substitute. AGENTS.md now says so explicitly.
+
 - Backend framework: Fastify. Ports: frontend `3000`, backend `3001`, PostgreSQL `5432` (this machine uses `POSTGRES_PORT` override — see below).
 - **Dev-server caveat:** Brave blocks the Next dev HMR WebSocket on this machine, which prevented client hydration in `next dev`. Verification used the production build (`next build` + `next start` / Docker). A normal browser does not have this issue.
 - Postgres host port is configurable via `POSTGRES_PORT` (compose default `5432`; this machine's local `.env` uses `5434` because `5432`/`5433` are taken by other projects). `DATABASE_URL` must match.

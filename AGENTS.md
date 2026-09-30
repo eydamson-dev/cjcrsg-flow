@@ -231,7 +231,9 @@ Include:
 * Manual verification
 * Relevant API verification
 * Relevant logs or responses
-* A reproducible test-steps guide (e.g. `docs/<milestone>-verification.md`) so the milestone can be re-verified from a clean environment
+* Step-by-step instructions the user can run to verify the milestone themselves
+
+The verification steps must be written **inline in the PR description** — not only in a linked doc — so the user can test and verify directly from the PR page. For UI steps, give the exact click-through (URLs, buttons, expected results) plus any API `curl` commands and their expected status codes/output. Also commit a reproducible test-steps guide (e.g. `docs/<milestone>-verification.md`) so the milestone can be re-verified from a clean environment, but treat the doc as a supplement to the inline PR guide, not a replacement for it.
 
 ## Evidence
 
