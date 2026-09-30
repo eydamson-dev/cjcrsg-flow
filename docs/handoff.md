@@ -52,6 +52,8 @@ Foundation in place:
 
 ## Reminders / Notes
 
+- **File-upload UX gotcha (chrome-devtools MCP):** in a tab driven by the MCP, an earlier automated `upload_file` call enables file-chooser interception, so the native OS file picker stops appearing for real human clicks in that tab (symptom: click does nothing, no console error; the click still focuses the input). Test real user clicks in a fresh tab/window — not the tab the agent drove. The image input uses a `<label htmlFor>` + `sr-only` input (robust + fixes the label a11y warning).
+
 - **PR descriptions must carry the verification steps inline** (commands, click-through, expected results) and the evidence links — the user verifies directly from the PR page. A linked `docs/<milestone>-verification.md` is a supplement, not a substitute. AGENTS.md now says so explicitly.
 
 - Backend framework: Fastify. Ports: frontend `3000`, backend `3001`, PostgreSQL `5432` (this machine uses `POSTGRES_PORT` override — see below).
