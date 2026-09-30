@@ -4,7 +4,14 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 3 — Content Creation & Management** — NOT STARTED. Create and manage content generated from Canva templates: dynamic forms from discovered fields, Canva Autofill generation, "Edit in Canva", content persistence, content library, and a content status workflow (Unfinished → Draft → Ready). See `ROADMAP.md` §MVP 3.
+**MVP 3 — Content Creation & Management** — IN PROGRESS on `milestone/mvp3-content`. Create and manage content generated from Canva templates: dynamic forms from discovered fields (text + image upload), Canva Autofill generation, "Edit in Canva", content persistence, content library, delete, and a content status workflow (Unfinished → Draft → Ready). See `ROADMAP.md` §MVP 3.
+
+Locked decisions (user-approved, do not revisit):
+- Image fields via Canva asset upload are IN SCOPE (`asset:write` scope is NOT yet in `oauth.ts` — needs portal enable + re-consent).
+- Field values stored as JSONB on Content (shapes mirror Canva DatasetValue).
+- Status: UNFINISHED = created-from-template, never saved; DRAFT = any "save draft" (never blocked); READY = explicit "save as ready", guarded (all fields valid + design generated). Status changes only via explicit actions; saving a draft on a READY item demotes to DRAFT.
+- Content delete is in scope. Library views: All / Unfinished / Drafts / Ready.
+- "Use template" on template detail creates the UNFINISHED record and opens the editor.
 
 ## Done
 
@@ -19,9 +26,9 @@ Foundation in place:
 
 ## Next
 
-1. Create the `milestone/mvp3-content` branch from `main`.
-2. Architect: design the content model (Prisma — `Content`, `ContentFieldValue`, `CanvaDesignReference`, status enum) and the dynamic-form UI approach. API research gate for anything new (Autofill job lifecycle is verified; check design-update mode if needed).
-3. Implement MVP 3 milestones 3.1–3.6 per `ROADMAP.md`, verifying each.
+1. ⏳ API research gate (api-researcher running): Canva asset upload (endpoint/headers/scopes/limits), design thumbnail expiry, partial (omitted-field) autofill behavior.
+2. ⏳ Architect (running): content model design — Prisma schema, Content module layout, REST API, JSONB shape, status guards, frontend structure.
+3. Review both, then implement MVP 3 milestones 3.1–3.6 per `ROADMAP.md`, verifying each.
 
 ## Constraints
 

@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 import type { StorageService, StoredObject } from "./storage-service.js";
 
@@ -19,6 +19,11 @@ export class LocalFilesystemStorage implements StorageService {
 
   async read(key: string): Promise<Uint8Array> {
     return readFile(this.resolveKey(key));
+  }
+
+  async delete(key: string): Promise<void> {
+    // rm already ignores missing files with force: true.
+    await rm(this.resolveKey(key), { force: true });
   }
 
   private resolveKey(key: string): string {

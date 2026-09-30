@@ -66,6 +66,29 @@ export interface ExportJobResponse {
   };
 }
 
+export interface CreateAssetUploadJobResponse {
+  job: {
+    id: string;
+    status: "in_progress" | "success" | "failed";
+  };
+}
+
+export interface AssetUploadJobResult {
+  job: {
+    id: string;
+    status: "in_progress" | "success" | "failed";
+    asset?: {
+      id: string;
+      type: string;
+      name: string;
+      thumbnail?: BrandTemplateThumbnail;
+      created_at?: number;
+      updated_at?: number;
+    };
+    error?: { code: string; message: string };
+  };
+}
+
 export class CanvaClient {
   async listBrandTemplates(
     accessToken: string,
@@ -152,6 +175,33 @@ export class CanvaClient {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return this.readJson<ExportJobResponse>(response);
+  }
+
+  // Asset upload mirrors Canva's own API: a raw binary body plus an
+  // Asset-Upload-Metadata header carrying the base64-encoded name.
+  async createAssetUploadJob(
+    accessToken: string,
+    params: { bytes: Uint8Array; name: string },
+  ): Promise<CreateAssetUploadJobResponse> {
+    const response = await fetch(`${CANVA_API_BASE}/asset-uploads`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/octet-stream",
+        "Asset-Upload-Metadata": JSON.stringify({
+          name_base64: Buffer.from(params.name).toString("base64"),
+        }),
+      },
+      body: Buffer.from(params.bytes),
+    });
+    return this.readJson<CreateAssetUploadJobResponse>(response);
+  }
+
+  async getAssetUploadJob(accessToken: string, jobId: string): Promise<AssetUploadJobResult> {
+    const response = await fetch(`${CANVA_API_BASE}/asset-uploads/${jobId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return this.readJson<AssetUploadJobResult>(response);
   }
 
   private async readJson<T>(response: Response): Promise<T> {

@@ -48,6 +48,10 @@ class FakeStorage implements StorageService {
     }
     return value;
   }
+
+  async delete(key: string): Promise<void> {
+    this.objects.delete(key);
+  }
 }
 
 function makeSource(
