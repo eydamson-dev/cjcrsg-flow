@@ -16,7 +16,10 @@ import { LocalFilesystemStorage } from "./storage/local-filesystem-storage.js";
 export async function buildApp(config: AppConfig) {
   const app = Fastify({ logger: true });
 
-  await app.register(cors, { origin: config.CORS_ORIGIN });
+  await app.register(cors, {
+    origin: config.CORS_ORIGIN,
+    methods: ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"],
+  });
 
   const canva = new CanvaService(config, new TokenStore(), new PendingAuthStore());
   const storage = new LocalFilesystemStorage(config.STORAGE_PATH);

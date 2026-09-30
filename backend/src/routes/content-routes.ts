@@ -65,6 +65,14 @@ function serialize(record: ContentRecord) {
 export const contentRoutes: FastifyPluginAsync<ContentRoutesOptions> = async (app, options) => {
   const { content, storage } = options;
 
+  // Image uploads ship as raw bytes with a content type such as image/png or
+  // application/octet-stream. Fastify 5 rejects unregistered content types with
+  // 415, so accept any type that is not already handled (JSON keeps its own
+  // exact parser) and hand through the raw Buffer.
+  app.addContentTypeParser("*", { parseAs: "buffer" }, (_request, body, done) => {
+    done(null, body);
+  });
+
   app.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     if (error instanceof ContentNotFoundError) {
       return reply.status(404).send({ error: error.message });
