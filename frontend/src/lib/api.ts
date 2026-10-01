@@ -215,3 +215,74 @@ export async function uploadContentAsset(
 
   return response.json() as Promise<{ assetId: string }>;
 }
+
+// --- Facebook publishing (MVP 4) ---
+
+export type PublicationStatus = "PUBLISHING" | "PUBLISHED" | "FAILED";
+
+export interface FacebookStatus {
+  configured: boolean;
+  connected: boolean;
+}
+
+export interface FacebookPage {
+  pageId: string;
+  name: string;
+  category: string | null;
+}
+
+export interface Publication {
+  id: string;
+  contentId: string;
+  status: PublicationStatus;
+  facebookPageId: string;
+  facebookPageName: string;
+  caption: string | null;
+  designId: string | null;
+  mediaKey: string | null;
+  mediaContentType: string | null;
+  facebookPostId: string | null;
+  facebookPhotoId: string | null;
+  publishedAt: string | null;
+  errorCode: number | null;
+  errorSubcode: number | null;
+  errorMessage: string | null;
+  fbtraceId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function fetchFacebookStatus(): Promise<FacebookStatus> {
+  return request<FacebookStatus>("/facebook/status");
+}
+
+export function facebookAuthorizeUrl(): string {
+  return `${API_URL}/facebook/oauth/authorize`;
+}
+
+export async function listFacebookPages(): Promise<FacebookPage[]> {
+  const { items } = await request<{ items: FacebookPage[] }>("/facebook/pages");
+  return items;
+}
+
+export function publishContent(
+  id: string,
+  body: { pageId: string; caption?: string },
+): Promise<Publication> {
+  return request<Publication>(`/content/${encodeURIComponent(id)}/publish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function listPublications(id: string): Promise<Publication[]> {
+  const { items } = await request<{ items: Publication[] }>(
+    `/content/${encodeURIComponent(id)}/publications`,
+  );
+  return items;
+}
+
+export function publicationMediaUrl(id: string): string {
+  return `${API_URL}/publications/${encodeURIComponent(id)}/media`;
+}

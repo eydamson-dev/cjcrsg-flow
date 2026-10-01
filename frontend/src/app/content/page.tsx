@@ -36,6 +36,7 @@ export default function ContentLibraryPage() {
   const [items, setItems] = useState<ContentRecord[] | null>(null);
   const [filter, setFilter] = useState<ContentFilter>("all");
   const [error, setError] = useState<string | null>(null);
+  const [facebookNotice, setFacebookNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const load = useCallback(async (active: ContentFilter) => {
@@ -51,11 +52,22 @@ export default function ContentLibraryPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // Captured before the async load so a slow response cannot lose the result
+    // of the Facebook OAuth redirect (?facebook=connected|error).
+    const facebook = new URLSearchParams(window.location.search).get("facebook");
 
     listContent("all")
       .then((result) => {
-        if (!cancelled) {
-          setItems(result);
+        if (cancelled) {
+          return;
+        }
+
+        setItems(result);
+
+        if (facebook === "connected") {
+          setFacebookNotice("Facebook Page connected.");
+        } else if (facebook === "error") {
+          setFacebookNotice("Facebook connection failed. Please try again.");
         }
       })
       .catch((cause: unknown) => {
@@ -125,6 +137,12 @@ export default function ContentLibraryPage() {
       {error && (
         <p className="mt-6 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
+        </p>
+      )}
+
+      {facebookNotice && !error && (
+        <p className="mt-6 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          {facebookNotice}
         </p>
       )}
 

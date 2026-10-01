@@ -18,6 +18,12 @@ const envSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().url().optional(),
   ),
+  FACEBOOK_APP_ID: optionalNonEmptyString,
+  FACEBOOK_APP_SECRET: optionalNonEmptyString,
+  FACEBOOK_REDIRECT_URI: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional(),
+  ),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

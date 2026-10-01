@@ -4,11 +4,17 @@ Working context for the current milestone. Update this file whenever milestone s
 
 ## Current Milestone
 
-**MVP 4 — Facebook Publishing** — NOT STARTED. Publish Ready content immediately to a connected Facebook Page: Facebook page connection (auth + permissions + page identification), publishing configuration (caption + target page + immediate publish), programmatic preparation of the generated Canva design as media (no manual download), and a Ready → Publishing → Published/Failed status workflow that records the Facebook Post ID, timestamp, and failure info. See `ROADMAP.md` §MVP 4.
+**MVP 4 — Facebook Publishing** — IMPLEMENTED on `milestone/mvp4-facebook`; PR prepared, awaiting user verification. Publish Ready content immediately to a connected Facebook Page: Facebook page connection (auth + permissions + page identification), publishing configuration (caption + target page + immediate publish), programmatic preparation of the generated Canva design as media (no manual download), and a Ready → Publishing → Published/Failed status workflow that records the Facebook Post ID, timestamp, and failure info. See `ROADMAP.md` §MVP 4.
 
-**API research gate required before implementation** (Meta Graph API — never assume): page-connection scopes/permissions (e.g. `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`), the page access-token flow, photo upload vs `/page/feed` publishing, immediate-publish behavior, and any limitations (e.g. scheduled-post support is MVP 5, keep separate).
+**API research gate COMPLETE** (Meta Graph API v26.0, verified against official docs). **Architecture DESIGNED** and implemented. Locked decisions: separate `Publication` record (Content stays `READY`); append-only (multiple posts per Content); **synchronous** publish; export **PNG**; failed attempts return `201` with `status: "FAILED"`. **Live Facebook publish is NOT yet exercised** — this environment has no Meta app configured; user verification is the remaining step.
 
 ## Done
+
+**MVP 4 — Facebook Publishing: RESEARCH + ARCHITECTURE COMPLETE** (implementation NOT STARTED).
+- Research gate (api-researcher, Meta Graph API v26.0): scopes `pages_show_list` / `pages_read_engagement` / `pages_manage_posts`; page token via `GET /me/accounts`; long-lived user token (`fb_exchange_token`) → **non-expiring** long-lived Page token; publish a local image with `POST /{page-id}/photos` (multipart binary) + `caption` (`message`/`name` deprecated; `/feed` cannot ingest a local image); `published=true` default; success returns `{ id, post_id }` with no timestamp (`created_time` via GET); error object (`code`/`error_subcode`/`message`/`fbtrace_id`); photos ≤ 10 MB (PNG < 1 MB recommended). **Standard Access suffices** for a private single-user app whose user holds a role on the Meta app (no App Review / Business Verification). Scheduling supported (`scheduled_publish_time`, 10 min–75 days) but deferred to MVP 5; reschedule/cancel remain UNVERIFIED.
+- `PROJECT.md` §13 updated with the verified Facebook capability table + notes (18 rows).
+- Architecture (architect): `FacebookPage` (persisted non-expiring Page token) + `Publication` (append-only; `PUBLISHING`/`PUBLISHED`/`FAILED`, page snapshot, caption, designId, mediaKey, post id/photo id, publishedAt, structured error); `modules/facebook` + `modules/publication`; synchronous `POST /content/:id/publish` = export PNG → durable key `exports/<contentId>/<designId>.png` → multipart `/photos` → `created_time`; `GET /publications/:id/media` resolves the MVP 1 stored-export read deferral; frontend "Publish to Facebook" card in `/content/[id]`; new env `FACEBOOK_APP_ID`/`_SECRET`/`_REDIRECT_URI`; no new npm deps.
+- Implementation COMPLETE (`milestone/mvp4-facebook`, **PR #4** open — awaiting user verification): Prisma `PublicationStatus`/`FacebookPage`/`Publication` + migration `20261001073548_facebook_publication`; backend `modules/facebook` (`oauth.ts`, `meta-error.ts`, `meta-client.ts`, `pending-auth-store.ts`, `facebook-page-repository.ts` + Prisma impl, `facebook-service.ts`) and `modules/publication` (`publication-repository.ts` + Prisma impl, `publication-service.ts`); routes `facebook-routes.ts` + `publication-routes.ts`; `env.ts` + `docker-compose.yml` + `.env.example` + `app.ts` wiring; frontend `lib/api.ts`, `facebook-publish-card.tsx`, editor integration, `/content` OAuth banner. 60 backend tests (23 new), lint/typecheck/build clean both apps, API smoke OK, publish card rendered (`docs/evidence/mvp4-publish-card.png`). Guide: `docs/mvp4-verification.md`.
 
 **MVP 3 — Content Creation & Management: COMPLETE and merged** (PR #3 into `main`).
 - Backend: `Content`/`ContentStatus`/`ContentAsset` models (snapshot provenance), Content module (repository → prisma → service → routes), generation with poll-driven once-guarded finalize + thumbnail storage, raw-binary image upload → Canva asset + local copy, StorageService.delete, shared image content-type helper.
@@ -28,10 +34,9 @@ Foundation in place:
 
 ## Next
 
-1. Create the `milestone/mvp4-facebook` branch from `main`.
-2. **API research gate (api-researcher):** verify Meta Graph API page publishing — required scopes/permissions, page access-token flow, photo upload vs `/page/feed`, immediate publish, and limitations. Record results in `PROJECT.md` §13.
-3. Architect: publishing model (`Publication` + `FacebookPage` entities, Ready → Publishing → Published/Failed), the export → upload path (reuse the MVP 1 export/download via `StorageService`; add a stored-export read route — deferred from MVP 1 and required here), and frontend publishing UI.
-4. Implement 4.1–4.5 per `ROADMAP.md`, verifying each; then PR with inline steps + embedded evidence.
+1. **User verification (blocking):** configure a Meta app (three permissions under Standard Access + exact redirect URI) and `FACEBOOK_*` env, connect a Page, then publish a READY content from `/content/[id]`; confirm the Facebook post id/timestamp and a failure path. Review the PR with its inline steps + evidence.
+2. After sign-off: merge the PR, then update this handoff and the Obsidian vault (Definition of Done) and begin MVP 5 planning.
+3. If a live publish surfaces a defect, fix on `milestone/mvp4-facebook` and re-verify before merging.
 
 ## Constraints
 
@@ -45,6 +50,8 @@ Foundation in place:
 - All file access through the storage abstraction.
 - Frontend must not hold platform credentials.
 - Only templates tagged `flow-template` are pulled (Canva `query` search; no dedicated tag API).
+- Facebook publish exports **PNG**; enforce a hard ≤ 10 MB guard before upload (Meta recommends PNG < 1 MB; oversize → recorded FAILED, no JPG fallback).
+- Meta setup prerequisite (not code): the app must hold `pages_show_list`/`pages_read_engagement`/`pages_manage_posts` under Standard Access and the sole user must hold an Admin/Developer/Tester role on the Meta app; `FACEBOOK_REDIRECT_URI` registered exactly (HTTPS required except localhost).
 
 ## Reminders / Notes
 
@@ -65,3 +72,5 @@ Foundation in place:
 - `handoff` skill loads/updates this file; run it on milestone start/finish.
 - Obsidian vault has `Projects/CJCRSG-Flow.md` for durable project memory.
 - Canva/Facebook capability baseline table is in `PROJECT.md` §13.
+- MVP 4 architecture decisions (locked): separate `Publication` record (Content stays `READY`); append-only multi-post; **synchronous** publish (`POST /content/:id/publish` runs export+upload inline); export **PNG**; failures return `201` + `status: "FAILED"`. Page token persisted in Postgres (plaintext); user token used only during callback and discarded; OAuth `state` in-memory.
+- MVP 4 design details (interfaces, routes, storage key scheme, error mapping, frontend card) are captured in the Obsidian vault `Projects/CJCRSG-Flow.md`.

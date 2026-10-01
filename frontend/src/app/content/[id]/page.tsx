@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ContentStatusBadge } from "@/components/content-status-badge";
 import { ContentThumbnail } from "@/components/content-thumbnail";
 import { DynamicContentForm } from "@/components/dynamic-content-form";
+import { FacebookPublishCard } from "@/components/facebook-publish-card";
 import {
   ApiError,
   deleteContent,
@@ -385,8 +386,8 @@ export default function ContentEditorPage() {
                     <ContentStatusBadge status={content.status} />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Saving a draft keeps the content editable. Marking it ready locks it for
-                    publishing (MVP 4).
+                    Saving a draft keeps the content editable. Marking it ready allows it to be
+                    published.
                   </p>
                   <div className="flex gap-2 pt-1">
                     <Button variant="outline" className="flex-1" disabled={saving || generating} onClick={() => void handleSaveDraft()}>
@@ -400,6 +401,11 @@ export default function ContentEditorPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              <FacebookPublishCard
+                contentId={content.id}
+                canPublish={content.status === "READY" && Boolean(designId)}
+              />
             </div>
           </div>
         </>

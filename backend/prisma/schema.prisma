@@ -81,6 +81,7 @@ model Content {
   updatedAt DateTime @updatedAt
 
   assets ContentAsset[]
+  publications Publication[]
 
   @@index([templateId])
   @@index([status, updatedAt])
@@ -106,4 +107,75 @@ model ContentAsset {
 
   @@unique([contentId, fieldName])
   @@map("content_assets")
+}
+
+// MVP 4 — Facebook Publishing.
+//
+// The connected Facebook Page. Private single-user app: the Page access token
+// is long-lived and does not expire (verified against Meta Graph v26.0), so it
+// is persisted here so publishing survives backend restarts. Tokens are never
+// exposed through the API or the frontend.
+model FacebookPage {
+  id          String   @id @default(cuid())
+  pageId      String   @unique
+  name        String
+  accessToken String
+  category    String?
+  tasks       Json?
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  publications Publication[]
+
+  @@map("facebook_pages")
+}
+
+enum PublicationStatus {
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+// One publish attempt of a Content to a Facebook Page. Append-only: a Content
+// may have many Publications (retry after failure, intentional re-publish), so
+// history is never overwritten. The Content stays READY; the publication
+// lifecycle lives here. The target Page is stored as an FK plus a snapshot so
+// history survives a Page disconnect (mirrors Content's template snapshot).
+model Publication {
+  id        String            @id @default(cuid())
+  contentId String
+  content   Content           @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  status    PublicationStatus
+
+  facebookPageRecordId String?
+  facebookPage         FacebookPage? @relation(fields: [facebookPageRecordId], references: [id], onDelete: SetNull)
+  facebookPageId       String
+  facebookPageName     String
+
+  // Publishing metadata (separate from Canva design fields).
+  caption String?
+
+  // Media provenance: the exact design/export used for this attempt.
+  designId         String?
+  mediaKey         String?
+  mediaContentType String?
+
+  // Meta result (where available).
+  facebookPostId  String?
+  facebookPhotoId String?
+  publishedAt     DateTime?
+
+  // Structured failure (Meta error object, or a synthetic export error).
+  errorCode    Int?
+  errorSubcode Int?
+  errorMessage String?
+  fbtraceId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contentId, createdAt])
+  @@index([status])
+  @@index([facebookPageRecordId])
+  @@map("publications")
 }
