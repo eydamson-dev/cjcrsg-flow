@@ -347,12 +347,23 @@ Current project baseline:
 | Open generated Canva design in Canva                             | SUPPORTED  |
 | Export Canva design programmatically                             | SUPPORTED  |
 | Canva asset upload (images)                                      | SUPPORTED  |
-| Facebook Page publishing                                         | SUPPORTED  |
-| Facebook scheduled Page publishing                               | SUPPORTED  |
-| Facebook scheduled-post status information                       | SUPPORTED  |
-| Facebook scheduled-post rescheduling through API                 | UNVERIFIED |
-| Facebook scheduled-post cancellation through API                 | UNVERIFIED |
-| Detecting direct Facebook-side schedule cancellation/change      | UNVERIFIED |
+| Facebook Login permissions (`pages_show_list`, `pages_read_engagement`, `pages_manage_posts`) | SUPPORTED  |
+| Facebook Page access-token flow (`GET /me/accounts`) | SUPPORTED  |
+| Long-lived user token (`fb_exchange_token`) and non-expiring long-lived Page token | SUPPORTED  |
+| Private single-user app under Standard Access (no App Review / Business Verification) | SUPPORTED WITH LIMITATIONS |
+| Facebook Page publishing — local image (`POST /{page-id}/photos`, multipart + `caption`) | SUPPORTED  |
+| Immediate publish (`published=true`, default) | SUPPORTED  |
+| Photo caption via `caption` (`message`/`name` deprecated) | SUPPORTED  |
+| Image constraints (jpeg/bmp/png/gif/tiff, ≤ 10 MB, PNG < 1 MB) | SUPPORTED  |
+| Publish result metadata (`id` + `post_id`; `created_time` via GET) | SUPPORTED  |
+| Graph API error object for failure capture | SUPPORTED  |
+| Pages rate limits (4800 × engaged users / 24h) | SUPPORTED WITH LIMITATIONS |
+| Caption length limit | UNVERIFIED |
+| Facebook scheduled Page publishing | SUPPORTED  |
+| Facebook scheduled-post status information | SUPPORTED  |
+| Facebook scheduled-post rescheduling through API | UNVERIFIED |
+| Facebook scheduled-post cancellation through API | UNVERIFIED |
+| Detecting direct Facebook-side schedule cancellation/change | UNVERIFIED |
 | Synchronizing those direct Facebook changes into the application | UNVERIFIED |
 
 Unverified capabilities must not become committed milestones until independently verified against current official documentation.
@@ -364,6 +375,8 @@ Canva brand-template **thumbnail URLs expire after 15 minutes**; the application
 Generated-design thumbnails expire on the same 15-minute schedule and are downloaded into storage at generation time.
 
 Image upload uses `POST /rest/v1/asset-uploads` (raw binary body + `Asset-Upload-Metadata: {"name_base64": ...}` header; images < 50 MB) with a job-based poll (`GET /rest/v1/asset-uploads/{jobId}`). It requires the **`asset:read` and `asset:write` scopes** — the scopes are not cumulative and both must be enabled in the Developer Portal and in the app's authorization request. Rate limits: asset uploads 30/min create, 180/min poll; Autofill 60/min create, 120/min poll.
+
+Facebook publishing was verified against Meta Graph API v26.0. Publish a local image with `POST /{page-id}/photos` (multipart/form-data binary + the `caption` parameter); `message` and `name` are deprecated on `/photos`, and `/page/feed` cannot ingest a local image for a photo post. `published` defaults to `true` for immediate publish. Publishing requires the `pages_show_list`, `pages_read_engagement`, and `pages_manage_posts` permissions; a private single-user app whose user holds a role on the Meta app can use them under Standard Access (no App Review or Business Verification). Obtain the non-expiring long-lived Page access token from a long-lived user token via `GET /me/accounts`. Success returns `{ id, post_id }` with no timestamp — read `created_time` via `GET /{post-id}`; capture failures from the standard error object (`error.code`, `error_subcode`, `error.message`, `error.fbtrace_id`). Photos must be ≤ 10 MB (PNG < 1 MB recommended). Scheduling (MVP 5) is supported via `scheduled_publish_time` (10 minutes–75 days); rescheduling and cancellation remain UNVERIFIED.
 
 ---
 
